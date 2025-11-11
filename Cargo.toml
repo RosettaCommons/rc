@@ -4,7 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.100"
 clap = { version = "4.5.51", features = ["derive"] }
+strum = { version = "0.27.2", features = ["derive"] }
+yansi = "1.0.1"
 
 [dev-dependencies]
 assert_cmd = { version = "2.1.1", features = ["color"] }
