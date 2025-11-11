@@ -1,0 +1,184 @@
+name: Release
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+env:
+  PROJECT_NAME: rc
+
+jobs:
+  release-apple-silicon:
+    runs-on: macos-14
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        export PATH="$HOME/.cargo/bin:$PATH"
+        rustup default stable
+
+    - name: Build Rust Code
+      run: cargo build --release
+
+    - name: Get Release Version
+      id: get_release_version
+      run: |
+        echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Create Zip Archive
+      run: |
+        version=$(echo ${{ steps.get_release_version.outputs.version }})
+        zip -j "$version-macos-aarch64.zip" target/release/$PROJECT_NAME
+        # NOTE: use zip -j to avoid including paths
+
+    - name: Upload Release Artifact with gh
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        version=${{ steps.get_release_version.outputs.version }}
+        gh release upload "$version" "${version}-macos-aarch64.zip#$PROJECT_NAME-${version}-macos-aarch64.zip"
+
+  release-apple-x86:
+    runs-on: macos-13
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        export PATH="$HOME/.cargo/bin:$PATH"
+        rustup default stable
+
+    - name: Build Rust Code
+      run: cargo build --release
+
+    - name: Get Release Version
+      id: get_release_version
+      run: |
+        echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Create Zip Archive
+      run: |
+        version=$(echo ${{ steps.get_release_version.outputs.version }})
+        zip -j "$version-macos-x86.zip" target/release/$PROJECT_NAME
+
+    - name: Upload Release Artifact with gh
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        version=${{ steps.get_release_version.outputs.version }}
+        gh release upload "$version" "${version}-macos-x86.zip#$PROJECT_NAME-${version}-macos-x86.zip"
+
+  # # works just fine but we do want static build
+  # release-linux-x86:
+  #   runs-on: ubuntu-22.04
+  #
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #
+  #   - name: Install Rust
+  #     run: |
+  #       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  #       export PATH="$HOME/.cargo/bin:$PATH"
+  #       rustup default stable
+  #
+  #   - name: Build Rust Code
+  #     run: cargo build --release
+  #
+  #   - name: Get Release Version
+  #     id: get_release_version
+  #     run: echo "::set-output name=version::${GITHUB_REF#refs/tags/}"
+  #
+  #   - name: Create Zip Archive
+  #     run: |
+  #       version=$(echo ${{ steps.get_release_version.outputs.version }})
+  #       zip -j "$version-linux-x86.zip" target/release/$PROJECT_NAME
+  #
+  #   - name: Upload Release Artifact with gh
+  #     env:
+  #       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     run: |
+  #       version=${{ steps.get_release_version.outputs.version }}
+  #       gh release upload "$version" "${version}-linux-x86.zip#$PROJECT_NAME-${version}-linux-x86.zip"
+
+
+  release-linux-x86:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        export PATH="$HOME/.cargo/bin:$PATH"
+        rustup default stable
+        rustup target add x86_64-unknown-linux-musl
+
+    - name: Build Rust Code
+      run: cargo build --release --target x86_64-unknown-linux-musl
+
+    - name: Get Release Version
+      id: get_release_version
+      run: |
+        echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Create Zip Archive
+      run: |
+        version=$(echo ${{ steps.get_release_version.outputs.version }})
+        zip -j "$version-linux-x86.zip" target/x86_64-unknown-linux-musl/release/$PROJECT_NAME
+
+    - name: Upload Release Artifact with gh
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        version=${{ steps.get_release_version.outputs.version }}
+        gh release upload "$version" "${version}-linux-x86.zip#$PROJECT_NAME-${version}-linux-x86.zip"
+
+  release-windows-x86:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install gcc-mingw-w64-x86-64
+      run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64
+
+    - name: Install Rust
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        export PATH="$HOME/.cargo/bin:$PATH"
+        rustup default stable
+        rustup target add x86_64-pc-windows-gnu
+
+    - name: Build Rust Code
+      run: cargo build --release --target x86_64-pc-windows-gnu
+
+    - name: Get Release Version
+      id: get_release_version
+      run: |
+        echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Create Zip Archive
+      run: |
+        version=$(echo ${{ steps.get_release_version.outputs.version }})
+        zip -j "$version-windows-x86.zip" target/x86_64-pc-windows-gnu/release/$PROJECT_NAME.exe
+
+    - name: Upload Release Artifact with gh
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        version=${{ steps.get_release_version.outputs.version }}
+        gh release upload "$version" "${version}-windows-x86.zip#$PROJECT_NAME-${version}-windows-x86.zip"
