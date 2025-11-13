@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use yansi::Paint;
 
-/// A simple command line tool
+/// A command line tool to run various Rosetta applications
 #[derive(Parser, Debug)]
 #[command(name = "rc")]
 #[command(version)]
@@ -20,11 +20,25 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Run a app with optional arguments
+    /// Clean an app installation
+    Clean {
+        /// The app to clean
+        #[arg(value_enum)]
+        app: App,
+    },
+
+    /// Install an app
+    Install {
+        /// The app to install
+        #[arg(value_enum)]
+        app: App,
+    },
+
+    /// Run an app with optional arguments
     Run {
         /// The app to run
         #[arg(value_enum)]
-        app: RunApp,
+        app: App,
 
         /// Optional arguments for the app
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
@@ -34,7 +48,7 @@ enum Commands {
 
 #[derive(ValueEnum, Clone, Copy, Debug, strum::Display)]
 #[strum(serialize_all = "kebab-case")] // "lowercase"
-enum RunApp {
+enum App {
     /// Run the Rosetta score command
     Score,
 
@@ -44,11 +58,11 @@ enum RunApp {
 
 type Handler = fn(Vec<String>) -> Result<()>;
 
-impl RunApp {
+impl App {
     fn handler(self) -> Handler {
         match self {
-            RunApp::Score => foo_score,
-            RunApp::Docking => foo_docking,
+            App::Score => foo_score,
+            App::Docking => foo_docking,
         }
     }
 
@@ -82,6 +96,16 @@ fn main() -> Result<()> {
     }
 
     match &args.command {
+        Some(Commands::Clean { app }) => {
+            println!("Cleaning app: {}", app.red());
+            app.execute(vec![])?;
+            Ok(())
+        }
+        Some(Commands::Install { app }) => {
+            println!("Cleaning app installation: {}", app.bright_green());
+            app.execute(vec![])?;
+            Ok(())
+        }
         Some(Commands::Run {
             app,
             args: app_args,
