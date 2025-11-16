@@ -190,34 +190,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install LLVM and Clang
-        run: sudo apt-get update && sudo apt-get install -y llvm clang lld
+      - name: Install gcc-mingw-w64 for ARM64
+        run: |
+          sudo apt-get update
+          # Install MinGW for ARM64 (cross compiler)
+          sudo apt-get install -y gcc-mingw-w64
+          # On some Ubuntu versions: sudo apt-get install -y g++-mingw-w64-aarch64
 
       - name: Install Rust
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           export PATH="$HOME/.cargo/bin:$PATH"
           rustup default stable
-          rustup target add aarch64-pc-windows-gnullvm
+          rustup target add aarch64-pc-windows-gnu
 
-      - name: Configure Cargo linker
-        run: |
-          mkdir -p .cargo
-          cat > .cargo/config.toml << 'EOF'
-          [target.aarch64-pc-windows-gnullvm]
-          linker = "clang"
-          rustflags = ["-C", "link-arg=-fuse-ld=lld", "-C", "link-arg=--target=aarch64-pc-windows-gnu"]
-          EOF
-
-      - name: Build Rust Code
-        run: cargo build --release --target aarch64-pc-windows-gnullvm
+      - name: Build Rust Code (Windows ARM64)
+        run: cargo build --release --target aarch64-pc-windows-gnu
 
       - name: Create Zip Archive
         run: |
-          zip -j "$RELEASE_VERSION-windows-arm.zip" target/aarch64-pc-windows-gnullvm/release/$PROJECT_NAME.exe
+          zip -j "$RELEASE_VERSION-windows-arm64.zip" target/aarch64-pc-windows-gnu/release/$PROJECT_NAME.exe
 
       - name: Upload Release Artifact with gh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "$RELEASE_VERSION" "${RELEASE_VERSION}-windows-arm.zip#$PROJECT_NAME-${RELEASE_VERSION}-windows-arm.zip" --clobber
+          gh release upload "$RELEASE_VERSION" \
+            "${RELEASE_VERSION}-windows-arm64.zip#$PROJECT_NAME-${RELEASE_VERSION}-windows-arm64.zip" \
+            --clobber
