@@ -1,4 +1,3 @@
-mod docker;
 mod executor;
 
 use std::{path::PathBuf, process};

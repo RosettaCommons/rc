@@ -1,10 +1,12 @@
+mod docker;
+
 use std::path::PathBuf;
 
 use anyhow::{Ok, Result, anyhow};
 use yansi::Paint;
 
 use super::App;
-use crate::{ContainerEngine, docker};
+use crate::ContainerEngine;
 
 // struct RunCommand {
 //     app: String,
@@ -45,7 +47,7 @@ use crate::{ContainerEngine, docker};
 //     todo!();
 // }
 
-pub struct Image(pub String);
+pub struct Image(String);
 
 impl Image {
     fn new(app: &App) -> Self {
