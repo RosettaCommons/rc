@@ -186,10 +186,6 @@ jobs:
     runs-on: windows-2022
     needs: prepare-release
 
-    env:
-      RELEASE_VERSION: ${{ needs.prepare-release.outputs.release_version }}
-      PROJECT_NAME: ${{ needs.prepare-release.outputs.project_name }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -205,6 +201,9 @@ jobs:
 
       - name: Create Zip Archive
         shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+          PROJECT_NAME: ${{ env.PROJECT_NAME }}
         run: |
           $zipName = "$env:RELEASE_VERSION-windows-arm64.zip"
           $exePath = "target\aarch64-pc-windows-msvc\release\$env:PROJECT_NAME.exe"
@@ -214,6 +213,8 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+          PROJECT_NAME: ${{ env.PROJECT_NAME }}
         run: |
           $zipName = "$env:RELEASE_VERSION-windows-arm64.zip"
           $label   = "$env:PROJECT_NAME-$env:RELEASE_VERSION-windows-arm64.zip"
