@@ -1,4 +1,7 @@
-use std::process;
+mod docker;
+mod executor;
+
+use std::{path::PathBuf, process};
 
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -6,9 +9,12 @@ use yansi::Paint;
 
 /// A command line tool to run various Rosetta applications
 #[derive(Parser, Debug)]
-#[command(name = "rc")]
-#[command(version)]
-#[command(about, long_about = None)]
+#[command(
+    name = env!("CARGO_PKG_NAME"),
+    version = env!("CARGO_PKG_VERSION"),
+    author = env!("CARGO_PKG_AUTHORS"),
+    about = env!("CARGO_PKG_DESCRIPTION")
+)]
 struct Args {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -16,6 +22,16 @@ struct Args {
     /// Verbose mode
     #[arg(short, long, global = true)]
     verbose: bool,
+}
+
+#[derive(ValueEnum, Clone, Copy, Debug, strum::Display)]
+#[strum(serialize_all = "kebab-case")] // "lowercase"
+enum ContainerEngine {
+    Docker,
+    Podman,
+    Singularity,
+    Apptainer,
+    None,
 }
 
 #[derive(Subcommand, Debug)]
@@ -43,6 +59,13 @@ enum Commands {
         /// Optional arguments for the app
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
+
+        /// Input directory path
+        #[arg(short, long)]
+        working_dir: Option<PathBuf>,
+
+        #[arg(short = 'e', long, default_value = "docker")]
+        container_engine: ContainerEngine,
     },
 }
 
@@ -52,39 +75,8 @@ enum App {
     /// Run the Rosetta score command
     Score,
 
-    /// Run the Rosetta docking command
-    Docking,
-}
-
-type Handler = fn(Vec<String>) -> Result<()>;
-
-impl App {
-    fn handler(self) -> Handler {
-        match self {
-            App::Score => foo_score,
-            App::Docking => foo_docking,
-        }
-    }
-
-    fn execute(self, args: Vec<String>) -> Result<()> {
-        (self.handler())(args)
-    }
-}
-
-fn foo_score(args: Vec<String>) -> Result<()> {
-    println!("Running score command");
-    if !args.is_empty() {
-        println!("With arguments: {:?}", args);
-    }
-    Ok(())
-}
-
-fn foo_docking(args: Vec<String>) -> Result<()> {
-    println!("Running docking command");
-    if !args.is_empty() {
-        println!("With arguments: {:?}", args);
-    }
-    Ok(())
+    /// Run the Rosetta protocol
+    Rosetta,
 }
 
 fn main() -> Result<()> {
@@ -98,27 +90,25 @@ fn main() -> Result<()> {
     match &args.command {
         Some(Commands::Clean { app }) => {
             println!("Cleaning app: {}", app.red());
-            app.execute(vec![])?;
-            Ok(())
+            todo!();
         }
         Some(Commands::Install { app }) => {
             println!("Cleaning app installation: {}", app.bright_green());
-            app.execute(vec![])?;
-            Ok(())
+            todo!();
         }
         Some(Commands::Run {
             app,
             args: app_args,
+            container_engine,
+            working_dir,
         }) => {
-            println!("Running app: {}", app.green());
-            if !app_args.is_empty() {
-                println!(
-                    "With arguments: {}",
-                    format!("{:?}", app_args).bright_blue()
-                );
-            }
-            app.execute(app_args.clone())?;
-            Ok(())
+            let working_dir = working_dir
+                .clone()
+                .unwrap_or_else(|| PathBuf::from("."))
+                .canonicalize()
+                .unwrap();
+
+            executor::run(app, app_args, container_engine, working_dir)
         }
         None => {
             eprintln!("Error: No command specified");

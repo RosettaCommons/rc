@@ -43,13 +43,13 @@ impl ContainerPathShim {
     /// Write all three shims (`docker`, `singularity`, `apptainer`) into the bin dir.
     pub fn install_all(&self) -> PathBuf {
         for name in Self::BIN_SHIMS {
-            self.install_one(name);
+            self.install(name);
         }
         self.bin.clone()
     }
 
     /// Write a single shim `<name>` into the bin dir.
-    pub fn install_one(&self, name: &str) -> PathBuf {
+    pub fn install(&self, name: &str) -> PathBuf {
         let path = self.bin_dir().join(name);
         write_executable(&path, SHIM_SCRIPT);
         self.bin.clone()
@@ -59,6 +59,7 @@ impl ContainerPathShim {
     ///
     /// Example use in a test:
     /// `let cmd = format!("{} && my-runner ...", shim.export_path_cmd());`
+    #[allow(dead_code)]
     pub fn export_path_cmd(&self) -> String {
         format!("export PATH={}:$PATH", self.bin_dir().display())
     }
@@ -101,7 +102,7 @@ mod tests {
     fn test_single_shim_installation() {
         for s in ContainerPathShim::BIN_SHIMS {
             let shim = ContainerPathShim::new();
-            let bin_dir = shim.install_one(s);
+            let bin_dir = shim.install(s);
 
             let shim_path = bin_dir.join(s);
             assert!(shim_path.exists(), "{} shim should exist", s);
