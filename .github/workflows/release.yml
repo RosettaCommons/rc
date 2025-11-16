@@ -217,42 +217,42 @@ jobs:
           gh release upload "$version" "${version}-windows-x86.zip#$PROJECT_NAME-${version}-windows-x86.zip"
 
   release-windows-arm:
-    runs-on: ubuntu-22.04-arm
+    runs-on: windows-2022
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install gcc-mingw-w64 for ARM64
-        run: |
-          sudo apt-get update
-          # Install MinGW for ARM64 (cross compiler)
-          sudo apt-get install -y gcc-mingw-w64
-          # On some Ubuntu versions: sudo apt-get install -y g++-mingw-w64-aarch64
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Rust
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          export PATH="$HOME/.cargo/bin:$PATH"
-          rustup default stable
-          rustup target add aarch64-pc-windows-gnu
+      - name: Add Windows ARM64 target
+        run: rustup target add aarch64-pc-windows-msvc
 
-      - name: Build Rust Code (Windows ARM64)
-        run: cargo build --release --target aarch64-pc-windows-gnu
+      - name: Build Rust code (Windows ARM64)
+        run: cargo build --release --target aarch64-pc-windows-msvc
 
       - name: Get Release Version
         id: get_release_version
+        shell: pwsh
         run: |
-          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          $version = "$env:GITHUB_REF" -replace 'refs/tags/', ''
+          echo "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Create Zip Archive
+        shell: pwsh
         run: |
-          version=$(echo ${{ steps.get_release_version.outputs.version }})
-          zip -j "$version-windows-arm64.zip" target/aarch64-pc-windows-gnu/release/$PROJECT_NAME.exe
+          $version = "${{ steps.get_release_version.outputs.version }}"
+          $zipName = "$version-windows-arm64.zip"
+          $exePath = "target\aarch64-pc-windows-msvc\release\$env:PROJECT_NAME.exe"
+          Compress-Archive -Path $exePath -DestinationPath $zipName -Force
 
       - name: Upload Release Artifact with gh
+        shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          version=${{ steps.get_release_version.outputs.version }}
-          gh release upload "$version" "${version}-windows-arm64.zip#$PROJECT_NAME-${version}-windows-arm64.zip"
+          $version = "${{ steps.get_release_version.outputs.version }}"
+          $zipName = "$version-windows-arm64.zip"
+          $label = "$env:PROJECT_NAME-$version-windows-arm64.zip"
+          gh release upload "$version" "$zipName#$label"
