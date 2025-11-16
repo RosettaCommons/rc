@@ -241,6 +241,8 @@ jobs:
 
       - name: Create Zip Archive
         shell: pwsh
+        env:
+          PROJECT_NAME: ${{ env.PROJECT_NAME }}
         run: |
           $version = "${{ steps.get_release_version.outputs.version }}"
           $zipName = "$version-windows-arm64.zip"
@@ -251,6 +253,7 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_NAME: ${{ env.PROJECT_NAME }}
         run: |
           $version = "${{ steps.get_release_version.outputs.version }}"
           $zipName = "$version-windows-arm64.zip"
