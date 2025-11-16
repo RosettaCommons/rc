@@ -16,8 +16,20 @@ jobs:
       - name: Build
         run: cargo build --verbose
 
+  tests:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
       - name: Run tests
         run: cargo test --verbose
 
-      - name: Run Dockertests
+  docker-tests:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Docker tests
         run: cargo test --verbose -F test-docker
