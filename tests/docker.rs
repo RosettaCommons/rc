@@ -97,6 +97,11 @@ fn docker_rosetta_score() {
     cmd.assert().success();
 
     use assert_fs::prelude::PathChild;
+
+    work_dir
+        .child(".0000.rc.log")
+        .assert(predicates::path::exists());
+
     let score_file = work_dir.child(score_file_name);
     score_file.assert(predicates::path::exists());
 
@@ -104,4 +109,6 @@ fn docker_rosetta_score() {
 
     assert!(predicates::str::contains("SCORE:").eval(&score));
     assert!(predicates::str::contains(format!("{pdb_id}_0001")).eval(&score));
+
+    // std::thread::sleep(std::time::Duration::from_secs(60));
 }
