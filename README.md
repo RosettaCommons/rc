@@ -8,27 +8,47 @@ A command line tool to run various biomolecular structural prediction, analysis 
 
 ## Installation
 
+`rc` relies on the [Rust programming language](https://rust-lang.org/). If you do not already
+have Rust installed on your system, see [Rust's Getting Started page](https://rust-lang.org/learn/get-started/). 
+
 ```bash
 cargo install --path .
 ```
 
 ## Basic Usage
 
-### Running Rosetta Score
+`rc` is an interface for Rosetta Commons-supported containers, so using it is as simple
+as adding `rc run -w` to the beginning of the command you would otherwise directly use
+with a container.
 
-Score a PDB structure file using Rosetta:
+### Usage Example: Running Rosetta Score
+
+This command will:
+- Use the default [Docker](https://www.docker.com/) container engine
+    - You will need to have a Docker Daemon installed and running for this
+    - If you cannot use Docker on your system, see the [next section](#specifying-a-container-engine)
+    - If you would like to install a Docker Daemon see either the [Docker Engine Installation guide](https://docs.docker.com/engine/install/) or the [Docker Desktop documentation](https://docs.docker.com/desktop/)
+- Mount the working directory into the container
+- Run the Rosetta score application
+
+<!--Score a PDB structure file using Rosetta:
 
 ```bash
 rc run -w /path/to/working/directory rosetta score \
     -out:file:scorefile output.sc \
     -in:file:s structure.pdb
 ```
+-->
 
-This command will:
-- Use the default Docker container engine
-- Mount the working directory into the container
-- Run the Rosetta score application
-- Output the score file to `output.sc`
+Run the Rosetta score executable
+
+```bash
+rc run score
+```
+This should print out the different input and output options for Rosetta's score 
+executable along with various other pieces of information relevant to how this
+executable functions. For a more detailed example of this see the [Examples](examples) 
+section. 
 
 ### Specifying a Container Engine
 
@@ -39,9 +59,9 @@ rc run -e singularity rosetta score -in:file:s structure.pdb
 ```
 
 Supported container engines:
-- `docker` (default)
-- `singularity`
-- `apptainer`
+- [`docker`](https://www.docker.com/) (default)
+- [`singularity`](https://docs.sylabs.io/guides/latest/user-guide/)
+- [`apptainer`](https://apptainer.org/)
 - `none` (run natively without containers)
 
 ### Working Directory
