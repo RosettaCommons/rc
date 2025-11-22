@@ -41,7 +41,10 @@ pub fn run_docker(Image(image): Image, args: Vec<String>, working_dir: PathBuf) 
         "{command_line}\nprocess success: {}\n{}\n{}\n{}\n",
         results.success, results.stdout, results.stderr, results.stderr
     );
-    fs::write(get_available_log_file_name(&working_dir), logs)?;
+
+    let t = Telemetry::new(&working_dir);
+
+    fs::write(t.log_file_name(), logs)?;
 
     if !results.success {
         eprintln!(
@@ -55,16 +58,60 @@ pub fn run_docker(Image(image): Image, args: Vec<String>, working_dir: PathBuf) 
         ));
     }
 
+    println!(
+        "{}",
+        format!(
+            "The exact command line used and full log saved into {:?}\nScratch dir for this run is: {:?}\n",
+            t.log_file_name(), t.scratch_dir()
+        )
+        .blue()
+        .dim()
+    );
+
     Ok(())
 }
 
-fn get_available_log_file_name(working_dir: &Path) -> PathBuf {
-    let mut i: u32 = 0;
-    loop {
-        let log_file = working_dir.join(format!(".{i:04}.rc.log"));
-        if !log_file.exists() {
-            return log_file;
+struct Telemetry {
+    working_dir: PathBuf,
+    prefix: String,
+}
+
+impl Telemetry {
+    fn new(working_dir: &Path) -> Self {
+        let mut i: u32 = 0;
+        loop {
+            let prefix = format!(".{i:04}.rc");
+            i += 1;
+
+            let r = Telemetry {
+                working_dir: working_dir.to_path_buf(),
+                prefix: prefix.to_string(),
+            };
+
+            if r.log_file_name().exists() || r.scratch_dir().exists() {
+                continue;
+            }
+
+            break r;
         }
-        i += 1;
+    }
+
+    pub fn log_file_name(&self) -> PathBuf {
+        self.working_dir.join(format!("{}.log", self.prefix))
+    }
+
+    pub fn scratch_dir(&self) -> PathBuf {
+        self.working_dir.join(format!("rc.scratch/{}", self.prefix))
     }
 }
+
+// fn get_available_log_file_name(working_dir: &Path) -> PathBuf {
+//     let mut i: u32 = 0;
+//     loop {
+//         let log_file = working_dir.join(format!(".{i:04}.rc.log"));
+//         if !log_file.exists() {
+//             return log_file;
+//         }
+//         i += 1;
+//     }
+// }
