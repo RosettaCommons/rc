@@ -29,6 +29,7 @@ This command will:
 - Mount the working directory into the container
 - Run the Rosetta score application
 - Output the score file to `output.sc`
+- Log the executed command to a log file for reproducibility
 
 ### Specifying a Container Engine
 
@@ -53,6 +54,15 @@ rc run -w ./data rosetta score -in:file:s input.pdb
 ```
 
 If not specified, the current directory (`.`) is used by default.
+
+## Command Logging
+
+Every command executed by `rc` is automatically logged to an appropriate log file. This provides:
+- **Reproducibility** - Review and replay exact commands that were run
+- **Debugging** - Trace what commands were executed in case of issues
+- **Documentation** - Keep a record of all operations performed
+
+The log files are stored in the working directory and contain the full command line that was executed, including all arguments passed to the containerized application.
 
 ## Commands
 
@@ -120,6 +130,8 @@ Enable verbose output with the `-v` flag:
 ```bash
 rc -v run rosetta score -in:file:s structure.pdb
 ```
+
+This will show detailed information including the exact command being executed and where it's being logged.
 
 ## Requirements
 
