@@ -77,6 +77,9 @@ enum App {
 
     /// Run the Rosetta protocol
     Rosetta,
+
+    /// Run the RFdiffusion command https://github.com/RosettaCommons/RFdiffusion
+    Rfdiffusion,
 }
 
 fn main() -> Result<()> {
