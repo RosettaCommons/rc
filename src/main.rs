@@ -28,7 +28,6 @@ struct Args {
 #[strum(serialize_all = "kebab-case")] // "lowercase"
 enum ContainerEngine {
     Docker,
-    Podman,
     Singularity,
     Apptainer,
     None,
@@ -111,7 +110,7 @@ fn main() -> Result<()> {
                 .canonicalize()
                 .unwrap();
 
-            executor::run(app, app_args, container_engine, working_dir)
+            executor::run(app, app_args.clone(), container_engine, working_dir)
         }
         None => {
             eprintln!("Error: No command specified");
