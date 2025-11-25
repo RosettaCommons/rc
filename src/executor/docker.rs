@@ -38,28 +38,31 @@ impl Executor {
             fs::create_dir_all(&d)?;
         }
 
-        // let c = util::Command::new("docker")
-        //     .arg("run")
-        //     .args(options.split(' '))
-        //     .args(self.args.clone());
+        let mut command = util::Command::new("docker");
 
-        // let result = c.call();
+        command
+            .arg("run")
+            .args(options.split(' '))
+            .arg(&self.image.0)
+            .args(self.args.clone());
 
-        let command_line = format!(
-            "docker run {options} {} {}",
-            self.image.0,
-            self.args.join(" ")
-        );
+        println!("Running {command}");
 
-        println!("Running {command_line}");
+        let result = command.call();
 
-        let result = util::Command::shell(&command_line).try_call();
+        // let command_line = format!(
+        //     "docker run {options} {} {}",
+        //     self.image.0,
+        //     self.args.join(" ")
+        // );
+        // println!("Running {command_line}");
+        // let result = util::Command::shell(&command_line).try_call();
 
         println!("{}", result.stdout.bright_black());
         eprintln!("{}", result.stderr.bright_red());
 
         let logs = format!(
-            "{command_line}\nprocess success: {}\n{}\n{}\n{}\n",
+            "{command}\nprocess success: {}\n{}\n{}\n{}\n",
             result.success, result.stdout, result.stderr, result.stderr
         );
 
