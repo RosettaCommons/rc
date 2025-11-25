@@ -170,7 +170,7 @@ fn docker_score() {
 
 #[test]
 #[cfg(feature = "test-docker")]
-fn docker_rfdiffusion_score() {
+fn docker_rfdiffusion() {
     use assert_fs::assert::PathAssert;
 
     let root = std::path::PathBuf::from("target/docker");
