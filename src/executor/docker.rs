@@ -44,7 +44,11 @@ impl Executor {
             .arg("run")
             .args(options.split(' '))
             .arg(&self.image.0)
-            .args(self.args.clone());
+            .args(self.args.clone())
+            .message(format!(
+                "Executing {} with arguments: {:?}",
+                self.app, self.args
+            ));
 
         println!("Running {command}");
 

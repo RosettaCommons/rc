@@ -22,6 +22,7 @@ pub struct Image(String);
 // }
 
 pub struct Executor {
+    app: App,
     image: Image,
     args: Vec<String>,
     working_dir: PathBuf,
@@ -31,6 +32,7 @@ pub struct Executor {
 
 impl Executor {
     pub fn new(
+        app: App,
         engine: ContainerEngine,
         image: Image,
         args: Vec<String>,
@@ -38,6 +40,7 @@ impl Executor {
         scarch: Option<String>,
     ) -> Self {
         Executor {
+            app,
             image,
             args,
             working_dir,
@@ -106,6 +109,7 @@ pub fn run(
     };
 
     Executor::new(
+        app.to_owned(),
         *container_engine,
         image,
         app_args.clone(),
