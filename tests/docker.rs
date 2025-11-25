@@ -111,6 +111,7 @@ fn docker_rosetta_score() {
     assert!(predicates::str::contains(format!("{pdb_id}_0001")).eval(&score));
 
     // std::thread::sleep(std::time::Duration::from_secs(60));
+    fixtures::docker_clear_cache();
 }
 
 #[test]
@@ -166,6 +167,7 @@ fn docker_score() {
     assert!(predicates::str::contains(format!("{pdb_id}_0001")).eval(&score));
 
     // std::thread::sleep(std::time::Duration::from_secs(60));
+    fixtures::docker_clear_cache();
 }
 
 #[test]
@@ -224,4 +226,5 @@ fn docker_rfdiffusion() {
     // assert!(predicates::str::contains(format!("{pdb_id}_0001")).eval(&score));
 
     // std::thread::sleep(std::time::Duration::from_secs(60));
+    fixtures::docker_clear_cache();
 }
