@@ -6,7 +6,7 @@ authors = ["Sergey Lyskov"]
 description = "Command line tool to run various biomolecular structural prediction, analysis and design applications"
 
 [features]
-test-docker = []
+docker-tests = []
 
 [dependencies]
 anyhow = "1.0.100"
@@ -26,6 +26,6 @@ reqwest = { version = "0.12.24", features = ["blocking"] }
 
 
 # [[test]]
-# name = "test-docker"
+# name = "docker-tests"
 # path = "tests/docker.rs"
-# required-features = ["test-docker"]
+# required-features = ["docker-tests"]

@@ -84,13 +84,13 @@ fn write_executable(path: &Path, content: &str) {
 }
 
 #[allow(dead_code)]
-#[cfg(feature = "test-docker")]
+#[cfg_attr(not(feature = "docker-tests"), ignore)]
 pub fn docker_clear_cache() {
     // detect if run under GitHub CI and clear Docker cache if so
     if std::env::var("GITHUB_ACTIONS").is_ok() {
         eprintln!("Running in GitHub CI, clearing Docker cache...");
         let output = std::process::Command::new("docker")
-            .args(&["system", "prune", "-af", "--volumes"])
+            .args(["system", "prune", "-af", "--volumes"])
             .output();
 
         match output {

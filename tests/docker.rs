@@ -58,7 +58,7 @@ fn mock_docker_rosetta_score() {
 }
 
 #[test]
-#[cfg(feature = "test-docker")]
+#[cfg_attr(not(feature = "docker-tests"), ignore)]
 fn docker_rosetta_score() {
     use assert_fs::assert::PathAssert;
     use std::fs;
@@ -115,7 +115,7 @@ fn docker_rosetta_score() {
 }
 
 #[test]
-#[cfg(feature = "test-docker")]
+#[cfg_attr(not(feature = "docker-tests"), ignore)]
 fn docker_score() {
     use assert_fs::assert::PathAssert;
     use std::fs;
@@ -171,7 +171,7 @@ fn docker_score() {
 }
 
 #[test]
-#[cfg(feature = "test-docker")]
+#[cfg_attr(not(feature = "docker-tests"), ignore)]
 fn docker_rfdiffusion() {
     use assert_fs::assert::PathAssert;
 
