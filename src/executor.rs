@@ -1,5 +1,5 @@
 mod docker;
-mod singularity;
+mod hpc_container;
 
 use std::path::PathBuf;
 
@@ -9,7 +9,8 @@ use yansi::Paint;
 use super::App;
 use crate::ContainerEngine;
 
-pub struct Image(String);
+struct Image(String);
+struct HpcContainerEngine(String);
 
 // impl Image {
 //     fn new(app: &App) -> Self {
@@ -19,6 +20,12 @@ pub struct Image(String);
 //             App::Rfdiffusion => Image("rosettacommons/rfdiffusion".to_string()),
 //         }
 //     }
+// }
+// #[derive(Debug, Display)]
+// #[strum(serialize_all = "kebab-case")]
+// enum HpcContainerRuntime {
+//     Apptainer,
+//     Singularity,
 // }
 
 pub struct Executor {
@@ -31,7 +38,7 @@ pub struct Executor {
 }
 
 impl Executor {
-    pub fn new(
+    fn new(
         app: App,
         engine: ContainerEngine,
         image: Image,
@@ -52,9 +59,12 @@ impl Executor {
     pub fn execute(&self) -> Result<()> {
         match self.engine {
             ContainerEngine::Docker => self.execute_with_docker(),
-            ContainerEngine::Singularity => self.execute_with_singularity(),
-            ContainerEngine::Apptainer => todo!(),
-            ContainerEngine::None => todo!(),
+
+            engine @ (ContainerEngine::Singularity | ContainerEngine::Apptainer) => {
+                self.execute_with_hpc_container_engine(HpcContainerEngine(engine.to_string()))
+            }
+
+            ContainerEngine::None => todo!("ContainerEngine::None"),
         }
     }
 }

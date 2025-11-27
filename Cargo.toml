@@ -11,6 +11,7 @@ docker-tests = []
 [dependencies]
 anyhow = "1.0.100"
 clap = { version = "4.5.51", features = ["derive"] }
+home = "0.5.12"
 shell-escape = "0.1.5"
 strum = { version = "0.27.2", features = ["derive"] }
 yansi = "1.0.1"

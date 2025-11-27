@@ -201,6 +201,9 @@ fn docker_rfdiffusion() {
             "inference.input_pdb=5tpn.pdb",
             "inference.num_designs=1",
             "contigmap.contigs=[10-40/A163-181/10-40]",
+            //"contigmap.contigs=[10-10/A163-181/10-10]",
+            //"contigmap.contigs=[100-100]",
+            "diffuser.T=20",
         ])
         .unwrap();
     cmd.assert().success();

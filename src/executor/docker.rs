@@ -9,7 +9,7 @@ use yansi::Paint;
 use crate::{executor::Executor, util};
 
 impl Executor {
-    pub fn execute_with_docker(&self) -> Result<()> {
+    pub(super) fn execute_with_docker(&self) -> Result<()> {
         println!(
             "Running docker container: {} working directory: {:?}",
             self.image.0, self.working_dir
