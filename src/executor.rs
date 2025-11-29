@@ -61,7 +61,7 @@ impl Executor {
             ContainerEngine::Docker => self.execute_with_docker(),
 
             engine @ (ContainerEngine::Singularity | ContainerEngine::Apptainer) => {
-                self.execute_with_hpc_container_engine(HpcContainerEngine(engine.to_string()))
+                self.execute_with_hpc_container_engine(&HpcContainerEngine(engine.to_string()))
             }
 
             ContainerEngine::None => todo!("ContainerEngine::None"),
