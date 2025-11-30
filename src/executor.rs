@@ -1,7 +1,7 @@
 mod docker;
 mod hpc_container;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use yansi::Paint;
@@ -10,7 +10,6 @@ use super::App;
 use crate::ContainerEngine;
 
 struct Image(String);
-struct HpcContainerEngine(String);
 
 // impl Image {
 //     fn new(app: &App) -> Self {
@@ -60,11 +59,24 @@ impl Executor {
         match self.engine {
             ContainerEngine::Docker => self.execute_with_docker(),
 
-            engine @ (ContainerEngine::Singularity | ContainerEngine::Apptainer) => {
-                self.execute_with_hpc_container_engine(&HpcContainerEngine(engine.to_string()))
+            ContainerEngine::Singularity | ContainerEngine::Apptainer => {
+                self.execute_with_hpc_container_engine()
             }
 
+            // engine @ (ContainerEngine::Singularity | ContainerEngine::Apptainer) => {
+            //     self.execute_with_hpc_container_engine(&HpcContainerEngine(engine.to_string()))
+            // }
             ContainerEngine::None => todo!("ContainerEngine::None"),
+        }
+    }
+
+    fn log_execute_info(&self) {
+        println!(
+            "Running {} container: {} working directory: {:?}",
+            self.engine, self.image.0, self.working_dir
+        );
+        if !self.args.is_empty() {
+            println!("With arguments: {:?}", self.args);
         }
     }
 }
@@ -132,4 +144,38 @@ pub fn run(
     //     ContainerEngine::Docker => docker::run_docker(image, app_args, working_dir)?,
     //     _ => Err(anyhow!("Unimplemented container type: {container_engine}"))?,
     // }
+}
+
+struct Telemetry {
+    working_dir: PathBuf,
+    prefix: String,
+}
+
+impl Telemetry {
+    fn new(working_dir: &Path) -> Self {
+        let mut i: u32 = 0;
+        loop {
+            let prefix = format!(".{i:04}.rc");
+            i += 1;
+
+            let r = Telemetry {
+                working_dir: working_dir.to_path_buf(),
+                prefix: prefix.to_string(),
+            };
+
+            if r.log_file_name().exists() || r.scratch_dir().exists() {
+                continue;
+            }
+
+            break r;
+        }
+    }
+
+    pub fn log_file_name(&self) -> PathBuf {
+        self.working_dir.join(format!("{}.log", self.prefix))
+    }
+
+    pub fn scratch_dir(&self) -> PathBuf {
+        self.working_dir.join(format!("rc.scratch/{}", self.prefix))
+    }
 }

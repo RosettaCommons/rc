@@ -84,6 +84,8 @@ fn docker_rosetta_score() {
     let cmd = cargo_bin_cmd!()
         .args([
             "run",
+            "--container-engine",
+            "docker",
             "-w",
             work_dir.path().to_str().unwrap(),
             "rosetta",
@@ -141,6 +143,8 @@ fn docker_score() {
     let cmd = cargo_bin_cmd!()
         .args([
             "run",
+            "--container-engine",
+            "docker",
             "-w",
             work_dir.path().to_str().unwrap(),
             "score",
@@ -195,6 +199,8 @@ fn docker_rfdiffusion() {
     let cmd = cargo_bin_cmd!()
         .args([
             "run",
+            "--container-engine",
+            "docker",
             "-w",
             work_dir.path().to_str().unwrap(),
             "rfdiffusion",

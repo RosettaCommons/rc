@@ -7,6 +7,8 @@ description = "Command line tool to run various biomolecular structural predicti
 
 [features]
 docker-tests = []
+hpc-tests = []
+all = ["docker-tests", "hpc-tests"]
 
 [dependencies]
 anyhow = "1.0.100"

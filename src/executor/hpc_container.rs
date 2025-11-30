@@ -1,28 +1,94 @@
-use std::{env::home_dir, path::PathBuf};
+use std::{env::home_dir, fs, path::PathBuf};
 
 use crate::{
-    executor::{Executor, HpcContainerEngine, Image},
-    util::Command,
+    ContainerEngine,
+    executor::{Executor, Image, Telemetry},
+    util::{self, Command},
 };
 
 use anyhow::Result;
 use yansi::Paint;
 
-// cover HpcContainerEngine
+struct HpcContainerEngine(String);
 
+// cover HpcContainerEngine
+//hpc_container_engine @ HpcContainerEngine(engine): &HpcContainerEngine,
+//
 impl Executor {
-    pub(super) fn execute_with_hpc_container_engine(
-        &self,
-        hpc_container_engine @ HpcContainerEngine(engine): &HpcContainerEngine,
-    ) -> Result<()> {
-        println!(
-            "Running {engine} container: {} working directory: {:?}",
-            self.image.0, self.working_dir
+    pub(super) fn execute_with_hpc_container_engine(&self) -> Result<()> {
+        assert!(matches!(
+            self.engine,
+            ContainerEngine::Singularity | ContainerEngine::Apptainer
+        ));
+
+        self.log_execute_info();
+
+        let engine = HpcContainerEngine(self.engine.to_string());
+
+        let image_path = self.build_image(&engine, &self.image);
+
+        let mut options = format!("--bind {}:/w --pwd /w", self.working_dir.display());
+
+        let t = Telemetry::new(&self.working_dir);
+
+        if let Some(scratch) = &self.scratch {
+            let d = t.scratch_dir();
+            options.push_str(&format!(
+                " --bind {}:/{scratch}",
+                d.to_str().expect("path is not valid UTF-8")
+            ));
+            fs::create_dir_all(&d)?;
+        }
+
+        let mut command = util::Command::new(engine.0);
+
+        command
+            .arg("run")
+            .args(options.split(' '))
+            .arg(image_path.to_string_lossy())
+            .args(self.args.clone())
+            .message(format!(
+                "Executing {} with arguments: {:?}",
+                self.app, self.args
+            ));
+
+        println!("Running {command}");
+
+        let result = command.call();
+
+        println!("{}", result.stdout.bright_black());
+        eprintln!("{}", result.stderr.bright_red());
+
+        let logs = format!(
+            "{command}\nprocess success: {}\n{}\n{}\n{}\n",
+            result.success, result.stdout, result.stderr, result.stderr
         );
 
-        let _image_path = self.build_image(hpc_container_engine, &self.image);
+        fs::write(t.log_file_name(), logs)?;
 
-        todo!("Implement execute_with_hpc_container_engine");
+        if !result.success {
+            eprintln!(
+                "{}",
+                "Container {engine} exited with non-zero status"
+                    .bright_red()
+                    .bold()
+            );
+            return Err(anyhow::anyhow!(
+                "Docker container exited with non-zero status"
+            ));
+        }
+
+        println!(
+            "{}",
+            format!(
+                "The exact command line used and full log saved into {:?}\nScratch dir for this run is: {:?}\n",
+                t.log_file_name(), t.scratch_dir()
+            )
+            .blue()
+            .dim()
+        );
+
+        Ok(())
     }
 
     fn build_image(
