@@ -1,4 +1,4 @@
-mod fixtures;
+mod common;
 
 use assert_cmd::cargo::cargo_bin_cmd;
 use assert_cmd::prelude::*;
@@ -31,11 +31,11 @@ fn no_run_no_app() {
 
 #[test]
 fn container_shim_test() {
-    let fixture = fixtures::ContainerPathShim::new();
+    let fixture = common::ContainerPathShim::new();
     let bin = fixture.install_all();
 
     // Call each shim with dummy arguments and check the invocation logs
-    for shim_name in fixtures::ContainerPathShim::BIN_SHIMS {
+    for shim_name in common::ContainerPathShim::BIN_SHIMS {
         let log_file = bin.join(format!("{}.log", shim_name));
         let shim_path = bin.join(shim_name);
 

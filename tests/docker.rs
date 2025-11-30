@@ -1,16 +1,15 @@
+mod common;
+
 use std::format;
 
 use assert_cmd::cargo::cargo_bin_cmd;
 use assert_cmd::prelude::*;
 use assert_fs::TempDir;
-
 use predicates::prelude::*;
-
-mod fixtures;
 
 #[test]
 fn mock_docker_rosetta_score() {
-    let fixture = fixtures::ContainerPathShim::new();
+    let fixture = common::ContainerPathShim::new();
     let bin = fixture.install("docker");
     let log_file = bin.join("docker.log");
 
@@ -113,7 +112,7 @@ fn docker_rosetta_score() {
     assert!(predicates::str::contains(format!("{pdb_id}_0001")).eval(&score));
 
     // std::thread::sleep(std::time::Duration::from_secs(60));
-    fixtures::docker_clear_cache();
+    common::docker_clear_cache();
 }
 
 #[test]
@@ -171,7 +170,7 @@ fn docker_score() {
     assert!(predicates::str::contains(format!("{pdb_id}_0001")).eval(&score));
 
     // std::thread::sleep(std::time::Duration::from_secs(60));
-    fixtures::docker_clear_cache();
+    common::docker_clear_cache();
 }
 
 #[test]
@@ -235,5 +234,5 @@ fn docker_rfdiffusion() {
     // assert!(predicates::str::contains(format!("{pdb_id}_0001")).eval(&score));
 
     // std::thread::sleep(std::time::Duration::from_secs(60));
-    fixtures::docker_clear_cache();
+    common::docker_clear_cache();
 }
