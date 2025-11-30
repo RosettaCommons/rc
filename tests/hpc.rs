@@ -1,42 +1,13 @@
+mod common;
+
 use assert_cmd::{assert::OutputAssertExt, cargo::cargo_bin_cmd};
 use assert_fs::TempDir;
 use predicates::prelude::*;
 
-const APPTAINER: &str = "apptainer";
-const SINGULARITY: &str = "singularity";
+common::engine_tests!(rosetta_score);
+common::engine_tests!(rosetta_score_2);
 
-macro_rules! engine_tests {
-    ($test_fn:ident) => {
-        ::paste::paste! {
-            #[test]
-            #[cfg_attr(not(feature = "hpc-tests"), ignore)]
-            fn [<singularity_ $test_fn>]() {
-                $test_fn(SINGULARITY);
-            }
-            #[test]
-            #[cfg_attr(not(feature = "hpc-tests"), ignore)]
-            fn [<apptainer_ $test_fn>]() {
-                $test_fn(APPTAINER);
-            }
-        }
-    };
-}
-engine_tests!(rosetta_score);
-
-// macro_rules! engine_tests {
-//     ($test_fn:ident, $($engine:ident),+ $(,)?) => {
-//         $(
-//             ::paste::paste! {
-//                 #[test]
-//                 #[cfg_attr(not(feature = "hpc-tests"), ignore)]
-//                 fn [<$engine:lower _ $test_fn>]() {
-//                     $test_fn($engine);
-//                 }
-//             }
-//         )*
-//     };
-// }
-// engine_tests!(rosetta_score, APPTAINER, SINGULARITY);
+fn rosetta_score_2(_engine: &str) {}
 
 fn rosetta_score(engine: &str) {
     use assert_fs::assert::PathAssert;

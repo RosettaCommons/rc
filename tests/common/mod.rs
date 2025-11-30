@@ -1,5 +1,10 @@
+mod macros;
 mod path_shim;
 
+#[allow(unused)]
+pub(crate) use macros::engine_tests;
+
+#[allow(unused)]
 pub use path_shim::ContainerPathShim;
 
 #[allow(dead_code)]

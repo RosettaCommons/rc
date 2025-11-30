@@ -66,6 +66,7 @@ impl ContainerPathShim {
 
     /// Returns env overrides you can pass to `std::process::Command` directly.
     /// This mirrors what `export_path_cmd()` would do in a shell.
+    #[allow(dead_code)]
     pub fn env_overrides(&self) -> [(&'static str, String); 1] {
         let current_path = std::env::var("PATH").unwrap_or_default();
         let new_path = format!("{}:{}", self.bin_dir().display(), current_path);
