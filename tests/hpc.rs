@@ -2,7 +2,43 @@ use assert_cmd::{assert::OutputAssertExt, cargo::cargo_bin_cmd};
 use assert_fs::TempDir;
 use predicates::prelude::*;
 
-fn hpc_rosetta_score(engine: &str) {
+const APPTAINER: &str = "apptainer";
+const SINGULARITY: &str = "singularity";
+
+macro_rules! engine_tests {
+    ($test_fn:ident) => {
+        ::paste::paste! {
+            #[test]
+            #[cfg_attr(not(feature = "hpc-tests"), ignore)]
+            fn [<singularity_ $test_fn>]() {
+                $test_fn(SINGULARITY);
+            }
+            #[test]
+            #[cfg_attr(not(feature = "hpc-tests"), ignore)]
+            fn [<apptainer_ $test_fn>]() {
+                $test_fn(APPTAINER);
+            }
+        }
+    };
+}
+engine_tests!(rosetta_score);
+
+// macro_rules! engine_tests {
+//     ($test_fn:ident, $($engine:ident),+ $(,)?) => {
+//         $(
+//             ::paste::paste! {
+//                 #[test]
+//                 #[cfg_attr(not(feature = "hpc-tests"), ignore)]
+//                 fn [<$engine:lower _ $test_fn>]() {
+//                     $test_fn($engine);
+//                 }
+//             }
+//         )*
+//     };
+// }
+// engine_tests!(rosetta_score, APPTAINER, SINGULARITY);
+
+fn rosetta_score(engine: &str) {
     use assert_fs::assert::PathAssert;
     use std::fs;
 
@@ -54,21 +90,4 @@ fn hpc_rosetta_score(engine: &str) {
 
     assert!(predicates::str::contains("SCORE:").eval(&score));
     assert!(predicates::str::contains(format!("{pdb_id}_0001")).eval(&score));
-
-    // std::thread::sleep(std::time::Duration::from_secs(60));
-}
-
-const APPTAINER: &str = "apptainer";
-const SINGULARITY: &str = "singularity";
-
-#[test]
-#[cfg_attr(not(feature = "hpc-tests"), ignore)]
-fn singularity_rosetta_score() {
-    hpc_rosetta_score(SINGULARITY);
-}
-
-#[test]
-#[cfg_attr(not(feature = "hpc-tests"), ignore)]
-fn apptainer_rosetta_score() {
-    hpc_rosetta_score(APPTAINER);
 }
