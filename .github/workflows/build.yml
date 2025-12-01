@@ -32,4 +32,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Docker tests
-        run: cargo test --verbose -F docker-tests -j1
+        run: cargo test --verbose -F docker-tests
+        # run: cargo test --verbose -F docker-tests -- --test-threads 1
