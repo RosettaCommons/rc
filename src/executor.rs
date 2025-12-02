@@ -115,6 +115,15 @@ pub fn run(
             None,
         ),
 
+        App::PyRosetta => (
+            Image("rosettacommons/rosetta:serial".into()),
+            {
+                app_args.insert(0, "python".into());
+                app_args
+            },
+            None,
+        ),
+
         App::Rfdiffusion => (
             Image("rosettacommons/rfdiffusion".into()),
             {

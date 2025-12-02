@@ -25,7 +25,7 @@ struct Args {
 }
 
 #[derive(ValueEnum, Clone, Copy, Debug, strum::Display)]
-#[strum(serialize_all = "kebab-case")] // "lowercase"
+#[strum(serialize_all = "lowercase")] //  "kebab-case"
 enum ContainerEngine {
     Docker,
     Singularity,
@@ -69,13 +69,17 @@ enum Commands {
 }
 
 #[derive(ValueEnum, Clone, Copy, Debug, strum::Display)]
-#[strum(serialize_all = "kebab-case")] // "lowercase"
+#[clap(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")] //  "kebab-case"
 enum App {
     /// Run the Rosetta score command
     Score,
 
     /// Run the Rosetta protocol
     Rosetta,
+
+    /// Start python in env where PyRosetta is installed and execute script
+    PyRosetta,
 
     /// Run the RFdiffusion command https://github.com/RosettaCommons/RFdiffusion
     Rfdiffusion,
