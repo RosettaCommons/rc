@@ -57,12 +57,17 @@ If not specified, the current directory (`.`) is used by default.
 
 ## Command Logging
 
-Every command executed by `rc` is automatically logged to an appropriate log file. This provides:
+Every command executed by `rc` is automatically logged to `<working-dir>/.NNNN.rc.log`, where `NNNN` is a sequential number incremented with each command run in that directory. This provides:
 - **Reproducibility** - Review and replay exact commands that were run
 - **Debugging** - Trace what commands were executed in case of issues
 - **Documentation** - Keep a record of all operations performed
 
-The log files are stored in the working directory and contain the full command line that was executed, including all arguments passed to the containerized application.
+Each log file contains:
+- The exact command line used to invoke `rc`
+- Full output logs from the executed application
+- Timestamp and execution details
+
+For example, your first run creates `.0000.rc.log`, the second creates `.0001.rc.log`, and so on.
 
 ## Commands
 
@@ -98,7 +103,7 @@ Clean an app installation (not yet implemented).
 rc clean <APP>
 ```
 
-## Examples
+## App Usage Examples
 
 ### Score a single structure
 
@@ -107,6 +112,21 @@ rc run rosetta score \
     -out:file:scorefile my_scores.sc \
     -in:file:s my_protein.pdb
 ```
+
+### Running PyRosetta Scripts
+
+Execute PyRosetta Python scripts directly using the `-c` flag for inline code:
+
+```bash
+rc run pyrosetta -c 'import pyrosetta; pyrosetta.init(); pose=pyrosetta.pose_from_pdb("1brs.pdb"); print("SCORE:", pyrosetta.get_score_function()(pose) )'
+```
+
+Or run a Python script file:
+
+```bash
+rc run pyrosetta my-pyrosetta-script.py
+```
+
 
 ### Using with different working directory
 
