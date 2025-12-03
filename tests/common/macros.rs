@@ -7,8 +7,8 @@ macro_rules! engine_tests {
             #[serial_test::serial]
             #[cfg_attr(not(feature = "docker-tests"), ignore)]
             fn [<docker_ $test_fn>]() {
-                $test_fn("docker");
                 common::docker_clear_cache();
+                $test_fn("docker");
             }
 
             #[test]
