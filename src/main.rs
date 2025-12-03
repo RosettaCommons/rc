@@ -79,9 +79,11 @@ enum App {
     Rosetta,
 
     /// Start python in env where PyRosetta is installed and execute script
+    #[value(aliases = ["PyRosetta"])]
     PyRosetta,
 
     /// Run the RFdiffusion command https://github.com/RosettaCommons/RFdiffusion
+    #[value(aliases = ["Rfdiffusion"])]
     Rfdiffusion,
 }
 

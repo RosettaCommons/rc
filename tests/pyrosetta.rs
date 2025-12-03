@@ -54,7 +54,11 @@ fn pyrosetta(engine: &str) {
         "core.init: Checking for fconfig files in pwd and ./rosetta/flags",
         "1brs.pdb structure SCORE: 255",
     ] {
-        assert!(predicates::str::contains(s).eval(&log));
+        assert!(
+            predicates::str::contains(s).eval(&log),
+            "Log output is missing expected string: {:?}",
+            s
+        );
     }
 
     // std::thread::sleep(std::time::Duration::from_secs(60));
