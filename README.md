@@ -84,8 +84,10 @@ rc run [OPTIONS] <APP> [ARGS]...
 - `-e, --container-engine <ENGINE>` - Container engine to use (default: docker)
 
 **Available Apps:**
-- `rosetta` - Run Rosetta protocol
-- `score` - Run Rosetta score command
+- `rosetta` - Run Rosetta protocols and applications
+- `score` - Run Rosetta score command (shorthand for common scoring tasks)
+- `pyrosetta` - Execute PyRosetta Python scripts with PyRosetta environment
+- `rfdiffusion` - Run RFdiffusion for protein structure generation
 
 ### `install`
 
@@ -105,7 +107,9 @@ rc clean <APP>
 
 ## App Usage Examples
 
-### Score a single structure
+### Rosetta
+
+#### Score a single structure
 
 ```bash
 rc run rosetta score \
@@ -113,7 +117,17 @@ rc run rosetta score \
     -in:file:s my_protein.pdb
 ```
 
-### Running PyRosetta Scripts
+#### Run other Rosetta protocols
+
+```bash
+rc run rosetta relax \
+    -in:file:s input.pdb \
+    -relax:fast
+```
+
+### PyRosetta
+
+#### Running PyRosetta Scripts
 
 Execute PyRosetta Python scripts directly using the `-c` flag for inline code:
 
@@ -127,8 +141,34 @@ Or run a Python script file:
 rc run pyrosetta my-pyrosetta-script.py
 ```
 
+#### Run a PyRosetta script file
 
-### Using with different working directory
+```bash
+rc run pyrosetta design_script.py
+```
+
+### RFdiffusion
+
+#### Generate a protein backbone
+
+```bash
+rc run rfdiffusion inference.py \
+    inference.output_prefix=output/sample \
+    inference.num_designs=10
+```
+
+#### Conditional generation with a motif
+
+```bash
+rc run rfdiffusion inference.py \
+    inference.output_prefix=output/motif_scaffold \
+    inference.input_pdb=motif.pdb \
+    'contigmap.contigs=[10-40/A163-181/10-40]'
+```
+
+### General Options
+
+#### Using with different working directory
 
 ```bash
 rc run -w /data/structures rosetta score \
@@ -136,7 +176,7 @@ rc run -w /data/structures rosetta score \
     -in:file:s protein.pdb
 ```
 
-### Using Singularity instead of Docker
+#### Using Singularity instead of Docker
 
 ```bash
 rc run -e singularity rosetta score \
