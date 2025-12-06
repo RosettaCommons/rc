@@ -86,9 +86,17 @@ enum App {
     #[value(aliases = ["Rfdiffusion"])]
     Rfdiffusion,
 
-    /// Run the RFdiffusion command https://github.com/RosettaCommons/RFdiffusion
+    /// Run the ProteinMPNN command https://github.com/dauparas/ProteinMPNN
     #[value(aliases = ["ProteinMPNN"])]
     Proteinmpnn,
+
+    /// Run the ProteinMPNN Script command https://github.com/dauparas/ProteinMPNN
+    #[value(aliases = ["ProteinMPNN-Script"])]
+    ProteinmpnnScript,
+
+    /// Run the LigandMPNN command https://github.com/dauparas/LigandMPNN
+    #[value(aliases = ["LigandMPNN"])]
+    Ligandmpnn,
 }
 
 fn main() -> Result<()> {
