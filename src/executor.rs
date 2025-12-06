@@ -128,13 +128,26 @@ pub fn run(
             Image("rosettacommons/rfdiffusion".into()),
             {
                 //app_args.insert(0, "inference.output_prefix=/w".into()); // /motifscaffolding
-                app_args.extend([
-                    "inference.output_prefix=/w/".into(),
-                    "inference.model_directory_path=/app/RFdiffusion/models".into(),
-                ]);
+                app_args.splice(
+                    0..0,
+                    [
+                        "inference.output_prefix=/w/".into(),
+                        "inference.model_directory_path=/app/RFdiffusion/models".into(),
+                    ],
+                );
                 app_args
             },
             Some("/app/RFdiffusion/schedules".into()),
+        ),
+
+        App::Proteinmpnn => (
+            Image("rosettacommons/proteinmpnn".into()),
+            {
+                //app_args.extend(["--out_folder=/w/".into()]);
+                app_args.splice(0..0, ["--out_folder=/w/".into()]);
+                app_args
+            },
+            None,
         ),
         //_ => todo!(),
     };
