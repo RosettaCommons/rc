@@ -88,6 +88,7 @@ rc run [OPTIONS] <APP> [ARGS]...
 - `score` - Run Rosetta score command (shorthand for common scoring tasks)
 - `pyrosetta` - Execute PyRosetta Python scripts with PyRosetta environment
 - `rfdiffusion` - Run RFdiffusion for protein structure generation
+- `proteinmpnn` - Run ProteinMPNN for protein sequence design
 
 ### `install`
 
@@ -164,6 +165,28 @@ rc run rfdiffusion inference.py \
     inference.output_prefix=output/motif_scaffold \
     inference.input_pdb=motif.pdb \
     'contigmap.contigs=[10-40/A163-181/10-40]'
+```
+
+### ProteinMPNN
+
+#### Design sequences for a protein structure
+
+```bash
+rc run proteinmpnn \
+    --pdb_path structure.pdb \
+    --pdb_path_chains "A B"
+```
+
+This will generate designed sequences in the `seqs/` directory within your working directory.
+
+#### Design with custom parameters
+
+```bash
+rc run proteinmpnn \
+    --pdb_path structure.pdb \
+    --pdb_path_chains "A" \
+    --num_seq_per_target 10 \
+    --sampling_temp 0.1
 ```
 
 ### General Options
