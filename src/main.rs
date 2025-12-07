@@ -91,7 +91,7 @@ enum App {
     Proteinmpnn,
 
     /// Run the ProteinMPNN Script command https://github.com/dauparas/ProteinMPNN
-    #[value(aliases = ["ProteinMPNN-Script"])]
+    #[value(aliases = ["Proteinmpnn-script", "ProteinMPNN-Script"])]
     ProteinmpnnScript,
 
     /// Run the LigandMPNN command https://github.com/dauparas/LigandMPNN

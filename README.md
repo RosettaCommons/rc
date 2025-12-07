@@ -89,6 +89,8 @@ rc run [OPTIONS] <APP> [ARGS]...
 - `pyrosetta` - Execute PyRosetta Python scripts with PyRosetta environment
 - `rfdiffusion` - Run RFdiffusion for protein structure generation
 - `proteinmpnn` - Run ProteinMPNN for protein sequence design
+- `proteinmpnn-script` - Run ProteinMPNN helper scripts for preprocessing and analysis
+- `ligandmpnn` - Run LigandMPNN for protein-ligand interface design
 
 ### `install`
 
