@@ -8,7 +8,7 @@ common::engine_tests!(ligandmpnn);
 fn ligandmpnn(engine: &str) {
     use assert_fs::assert::PathAssert;
 
-    let root = std::path::PathBuf::from("target/proteinmpnn").join(engine);
+    let root = std::path::PathBuf::from("target/ligandmpnn").join(engine);
     std::fs::create_dir_all(&root).expect("create engine testing dir");
     let work_dir = TempDir::new_in(root).expect("create temp dir");
 

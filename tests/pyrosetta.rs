@@ -10,7 +10,7 @@ fn pyrosetta(engine: &str) {
     use assert_fs::assert::PathAssert;
     use std::fs;
 
-    let root = std::path::PathBuf::from("target/score").join(engine);
+    let root = std::path::PathBuf::from("target/pyrosetta").join(engine);
     std::fs::create_dir_all(&root).expect("create engine testing dir");
     let work_dir = TempDir::new_in(root).expect("create temp dir");
 
