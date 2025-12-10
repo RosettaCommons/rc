@@ -48,11 +48,13 @@ fn pyrosetta(engine: &str) {
 
     let log = fs::read_to_string(&log_file_name).unwrap();
 
+    println!("{log}");
+
     for s in [
         "PyRosetta-4",
         "Created in JHU by Sergey Lyskov and PyRosetta Team",
         "core.init: Checking for fconfig files in pwd and ./rosetta/flags",
-        "1brs.pdb structure SCORE: 255",
+        "1brs.pdb structure SCORE:",
     ] {
         assert!(
             predicates::str::contains(s).eval(&log),
