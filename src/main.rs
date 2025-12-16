@@ -1,3 +1,4 @@
+mod app;
 mod executor;
 mod util;
 
@@ -6,6 +7,8 @@ use std::{path::PathBuf, process};
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use yansi::Paint;
+
+use app::App;
 
 /// A command line tool to run various Rosetta applications
 #[derive(Parser, Debug)]
@@ -66,37 +69,6 @@ enum Commands {
         #[arg(short = 'e', long, default_value = "docker")]
         container_engine: ContainerEngine,
     },
-}
-
-#[derive(ValueEnum, Clone, Copy, Debug, strum::Display)]
-#[clap(rename_all = "lowercase")]
-#[strum(serialize_all = "lowercase")] //  "kebab-case"
-enum App {
-    /// Run the Rosetta score command
-    Score,
-
-    /// Run the Rosetta protocol
-    Rosetta,
-
-    /// Start python in env where PyRosetta is installed and execute script
-    #[value(aliases = ["PyRosetta"])]
-    PyRosetta,
-
-    /// Run the RFdiffusion command https://github.com/RosettaCommons/RFdiffusion
-    #[value(aliases = ["Rfdiffusion"])]
-    Rfdiffusion,
-
-    /// Run the ProteinMPNN command https://github.com/dauparas/ProteinMPNN
-    #[value(aliases = ["ProteinMPNN"])]
-    Proteinmpnn,
-
-    /// Run the ProteinMPNN Script command https://github.com/dauparas/ProteinMPNN
-    #[value(aliases = ["Proteinmpnn-script", "ProteinMPNN-Script"])]
-    ProteinmpnnScript,
-
-    /// Run the LigandMPNN command https://github.com/dauparas/LigandMPNN
-    #[value(aliases = ["LigandMPNN"])]
-    Ligandmpnn,
 }
 
 fn main() -> Result<()> {

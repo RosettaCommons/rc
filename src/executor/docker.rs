@@ -5,15 +5,16 @@ use yansi::Paint;
 
 use crate::{
     ContainerEngine,
+    app::{MountRole, RunSpec},
     executor::{Executor, Telemetry},
     util,
 };
 
 impl Executor {
-    pub(super) fn execute_with_docker(&self) -> Result<()> {
+    pub(super) fn execute_with_docker(&self, spec: RunSpec) -> Result<()> {
         assert!(matches!(self.engine, ContainerEngine::Docker));
 
-        self.log_execute_info();
+        self.log_execute_info(&spec);
 
         let mut options = format!("--volume {}:/w --workdir /w", self.working_dir.display());
 
@@ -26,7 +27,7 @@ impl Executor {
 
         let t = Telemetry::new(&self.working_dir);
 
-        if let Some(scratch) = &self.scratch {
+        if let Some(scratch) = &spec.mounts.get(&MountRole::Scratch) {
             let d = t.scratch_dir();
             options.push_str(&format!(
                 " --volume {}:/{scratch}",
@@ -40,11 +41,11 @@ impl Executor {
         command
             .arg("run")
             .args(options.split(' '))
-            .arg(&self.image.0)
-            .args(self.args.clone())
+            .arg(&spec.image.0)
+            .args(spec.args.clone())
             .message(format!(
                 "Executing {} with arguments: {:?}",
-                self.app, self.args
+                self.app, spec.args
             ));
 
         println!("Running {command}");

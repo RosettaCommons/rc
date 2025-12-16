@@ -7,83 +7,52 @@ use anyhow::Result;
 use yansi::Paint;
 
 use super::App;
-use crate::ContainerEngine;
-
-struct Image(String);
-
-// impl Image {
-//     fn new(app: &App) -> Self {
-//         match app {
-//             App::Score => Image("rosettacommons/rosetta:serial".to_string()),
-//             App::Rosetta => Image("rosettacommons/rosetta:serial".to_string()),
-//             App::Rfdiffusion => Image("rosettacommons/rfdiffusion".to_string()),
-//         }
-//     }
-// }
-// #[derive(Debug, Display)]
-// #[strum(serialize_all = "kebab-case")]
-// enum HpcContainerRuntime {
-//     Apptainer,
-//     Singularity,
-// }
+use crate::{
+    ContainerEngine,
+    app::{Image, RunSpec},
+};
 
 pub struct Executor {
     app: App,
-    image: Image,
-    args: Vec<String>,
     working_dir: PathBuf,
-    scratch: Option<String>,
     engine: ContainerEngine,
 }
 
 impl Executor {
-    fn new(
-        app: App,
-        engine: ContainerEngine,
-        image: Image,
-        args: Vec<String>,
-        working_dir: PathBuf,
-        scarch: Option<String>,
-    ) -> Self {
+    fn new(app: App, engine: ContainerEngine, working_dir: PathBuf) -> Self {
         Executor {
             app,
-            image,
-            args,
             working_dir,
             engine,
-            scratch: scarch,
         }
     }
 
-    pub fn execute(&self) -> Result<()> {
+    pub fn execute(&self, spec: RunSpec) -> Result<()> {
         match self.engine {
-            ContainerEngine::Docker => self.execute_with_docker(),
+            ContainerEngine::Docker => self.execute_with_docker(spec),
 
             ContainerEngine::Singularity | ContainerEngine::Apptainer => {
-                self.execute_with_hpc_container_engine()
+                self.execute_with_hpc_container_engine(spec)
             }
 
-            // engine @ (ContainerEngine::Singularity | ContainerEngine::Apptainer) => {
-            //     self.execute_with_hpc_container_engine(&HpcContainerEngine(engine.to_string()))
-            // }
             ContainerEngine::None => todo!("ContainerEngine::None"),
         }
     }
 
-    fn log_execute_info(&self) {
+    fn log_execute_info(&self, spec: &RunSpec) {
         println!(
             "Running {} container: {} working directory: {:?}",
-            self.engine, self.image.0, self.working_dir
+            self.engine, spec.image.0, self.working_dir
         );
-        if !self.args.is_empty() {
-            println!("With arguments: {:?}", self.args);
+        if !spec.args.is_empty() {
+            println!("With arguments: {:?}", spec.args);
         }
     }
 }
 
 pub fn run(
     app: &App,
-    mut app_args: Vec<String>,
+    app_args: Vec<String>,
     container_engine: &ContainerEngine,
     working_dir: PathBuf,
 ) -> Result<()> {
@@ -99,114 +68,7 @@ pub fn run(
         );
     }
 
-    let (image, app_args, scratch) = match app {
-        App::Score => (
-            Image("rosettacommons/rosetta:serial".into()),
-            {
-                app_args.insert(0, "score".into());
-                app_args
-            },
-            None,
-        ),
-
-        App::Rosetta => (
-            Image("rosettacommons/rosetta:serial".into()),
-            app_args,
-            None,
-        ),
-
-        App::PyRosetta => (
-            Image("rosettacommons/rosetta:serial".into()),
-            {
-                app_args.insert(0, "python".into());
-                app_args
-            },
-            None,
-        ),
-
-        App::Rfdiffusion => (
-            Image("rosettacommons/rfdiffusion".into()),
-            {
-                //app_args.insert(0, "inference.output_prefix=/w".into()); // /motifscaffolding
-                app_args.splice(
-                    0..0,
-                    [
-                        "inference.output_prefix=/w/".into(),
-                        "inference.model_directory_path=/app/RFdiffusion/models".into(),
-                    ],
-                );
-                app_args
-            },
-            Some("/app/RFdiffusion/schedules".into()),
-        ),
-
-        App::Proteinmpnn => (
-            Image("rosettacommons/proteinmpnn".into()),
-            {
-                //app_args.extend(["--out_folder=/w".into()]);
-                app_args.splice(0..0, ["--out_folder=/w".into()]);
-                app_args
-            },
-            None,
-        ),
-
-        App::ProteinmpnnScript => (
-            Image("rosettacommons/proteinmpnn".into()),
-            {
-                assert!(
-                    app_args.is_empty() || app_args[0].starts_with("-"),
-                    "ProteinmpnnScript arguments must include a script name as first argument"
-                );
-
-                let have_input_path_option = ![
-                    "helper_scripts/make_bias_AA.py",
-                    "helper_scripts/make_pssm_input_dict.py",
-                ]
-                .contains(&app_args[0].as_str());
-
-                if have_input_path_option {
-                    app_args.splice(1..1, ["--input_path=/w".into()]);
-                }
-                app_args.splice(1..1, ["--output_path=/w".into()]);
-                app_args[0].insert_str(0, "/app/proteinmpnn/helper_scripts/");
-
-                app_args
-            },
-            None,
-        ),
-
-        App::Ligandmpnn => (
-            Image("rosettacommons/ligandmpnn".into()),
-            {
-                app_args.splice(
-                    0..0,
-                    [
-                        "--out_folder=/w".into(),
-                        "--checkpoint_protein_mpnn".into(),
-                        "/app/ligandmpnn/model_params/proteinmpnn_v_48_020.pt".into(),
-                    ],
-                );
-                app_args
-            },
-            None,
-        ),
-        //_ => todo!(),
-    };
-
-    Executor::new(
-        app.to_owned(),
-        *container_engine,
-        image,
-        app_args.clone(),
-        working_dir,
-        scratch,
-    )
-    .execute()
-
-    // match container_engine {
-    //     ContainerEngine::Docker => docker::run_docker(image, app_args, working_dir)?,
-    //     _ => Err(anyhow!("Unimplemented container type: {container_engine}"))?,
-    // }
+    Executor::new(app.to_owned(), *container_engine, working_dir).execute(app.run_spec(app_args))
 }
 
 struct Telemetry {

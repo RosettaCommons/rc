@@ -2,6 +2,7 @@ use std::{env::home_dir, fs, path::PathBuf};
 
 use crate::{
     ContainerEngine,
+    app::{MountRole, RunSpec},
     executor::{Executor, Image, Telemetry},
     util::{self, Command},
 };
@@ -15,23 +16,23 @@ struct HpcContainerEngine(String);
 //hpc_container_engine @ HpcContainerEngine(engine): &HpcContainerEngine,
 //
 impl Executor {
-    pub(super) fn execute_with_hpc_container_engine(&self) -> Result<()> {
+    pub(super) fn execute_with_hpc_container_engine(&self, spec: RunSpec) -> Result<()> {
         assert!(matches!(
             self.engine,
             ContainerEngine::Singularity | ContainerEngine::Apptainer
         ));
 
-        self.log_execute_info();
+        self.log_execute_info(&spec);
 
         let engine = HpcContainerEngine(self.engine.to_string());
 
-        let image_path = self.build_image(&engine, &self.image);
+        let image_path = self.build_image(&engine, &spec.image);
 
         let mut options = format!("--bind {}:/w --pwd /w", self.working_dir.display());
 
         let t = Telemetry::new(&self.working_dir);
 
-        if let Some(scratch) = &self.scratch {
+        if let Some(scratch) = &spec.mounts.get(&MountRole::Scratch) {
             let d = t.scratch_dir();
             options.push_str(&format!(
                 " --bind {}:/{scratch}",
@@ -46,10 +47,10 @@ impl Executor {
             .arg("run")
             .args(options.split(' '))
             .arg(image_path.to_string_lossy())
-            .args(self.args.clone())
+            .args(spec.args.clone())
             .message(format!(
                 "Executing {} with arguments: {:?}",
-                self.app, self.args
+                self.app, spec.args
             ));
 
         println!("Running {command}");
