@@ -1,6 +1,6 @@
 use crate::app::RunSpec;
 
-pub fn proteinmpnn_script(mut app_args: Vec<String>) -> RunSpec {
+pub fn spec(mut app_args: Vec<String>) -> RunSpec {
     assert!(
         app_args.is_empty() || app_args[0].starts_with("-"),
         "ProteinmpnnScript arguments must include a script name as first argument"

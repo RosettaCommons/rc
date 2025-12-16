@@ -1,6 +1,6 @@
 use crate::app::RunSpec;
 
-pub fn picap(mut app_args: Vec<String>) -> RunSpec {
+pub fn spec(mut app_args: Vec<String>) -> RunSpec {
     app_args.splice(
         0..0,
         [

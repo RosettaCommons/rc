@@ -82,14 +82,14 @@ impl RunSpec {
 impl App {
     pub fn run_spec(self, app_args: Vec<String>) -> RunSpec {
         match self {
-            App::Score => score::score(app_args),
-            App::Rosetta => rosetta::rosetta(app_args),
-            App::PyRosetta => pyrosetta::pyrosetta(app_args),
-            App::Rfdiffusion => rfdiffusion::rfdiffusion(app_args),
-            App::Proteinmpnn => proteinmpnn::proteinmpnn(app_args),
-            App::ProteinmpnnScript => proteinmpnn_script::proteinmpnn_script(app_args),
-            App::Ligandmpnn => ligandmpnn::ligandmpnn(app_args),
-            App::Picap => picap::picap(app_args),
+            App::Score => score::spec(app_args),
+            App::Rosetta => rosetta::spec(app_args),
+            App::PyRosetta => pyrosetta::spec(app_args),
+            App::Rfdiffusion => rfdiffusion::spec(app_args),
+            App::Proteinmpnn => proteinmpnn::spec(app_args),
+            App::ProteinmpnnScript => proteinmpnn_script::spec(app_args),
+            App::Ligandmpnn => ligandmpnn::spec(app_args),
+            App::Picap => picap::spec(app_args),
         }
     }
 }
