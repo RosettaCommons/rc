@@ -48,6 +48,15 @@ pub enum App {
 
 pub struct Image(pub String);
 
+// enum IoLayout {
+//     Workdir(PathBuf),
+//     InputOutput { input: PathBuf, output: PathBuf },
+// }
+// struct ContainerMounts {
+//     io: IoLayout,
+//     scratch: Option<PathBuf>,
+// }
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MountRole {
     WorkingDir,

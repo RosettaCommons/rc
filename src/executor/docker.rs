@@ -50,7 +50,7 @@ impl Executor {
 
         println!("Running {command}");
 
-        let result = command.call();
+        let result = command.live().call();
 
         // let command_line = format!(
         //     "docker run {options} {} {}",
@@ -60,8 +60,8 @@ impl Executor {
         // println!("Running {command_line}");
         // let result = util::Command::shell(&command_line).try_call();
 
-        println!("{}", result.stdout.bright_black());
-        eprintln!("{}", result.stderr.bright_red());
+        //println!("{}", result.stdout.bright_black());
+        //eprintln!("{}", result.stderr.bright_red());
 
         let logs = format!(
             "{command}\nprocess success: {}\n{}\n{}\n{}\n",

@@ -55,10 +55,10 @@ impl Executor {
 
         println!("Running {command}");
 
-        let result = command.call();
+        let result = command.live().call();
 
-        println!("{}", result.stdout.bright_black());
-        eprintln!("{}", result.stderr.bright_red());
+        // println!("{}", result.stdout.bright_black());
+        // eprintln!("{}", result.stderr.bright_red());
 
         let logs = format!(
             "{command}\nprocess success: {}\n{}\n{}\n{}\n",
