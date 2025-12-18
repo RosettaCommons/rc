@@ -1,3 +1,4 @@
+use std::sync::mpsc::Sender;
 use std::{
     fmt::{self},
     io::{Read, Write},
@@ -156,6 +157,36 @@ impl Command {
     //     }
     // }
 
+    fn spawn_pipe_thread<R, W>(
+        mut reader: R,
+        sink: W,
+        tx: Sender<Vec<u8>>,
+    ) -> thread::JoinHandle<()>
+    where
+        R: Read + Send + 'static,
+        W: Write + Send + 'static,
+    {
+        thread::spawn(move || {
+            let mut output = Vec::new();
+            let mut buf = [0u8; 8192];
+            let mut sink = sink;
+
+            loop {
+                let n = match reader.read(&mut buf) {
+                    Ok(0) => break,
+                    Ok(n) => n,
+                    Err(_) => break,
+                };
+
+                output.extend_from_slice(&buf[..n]);
+                let _ = sink.write_all(&buf[..n]);
+            }
+
+            let _ = sink.flush();
+            let _ = tx.send(output);
+        })
+    }
+
     /// Execute the command and capture both stdout and stderr while simultaneously printing them live if live is true
     pub fn try_call(&self) -> CommandResults {
         println!("{self:#}");
@@ -177,61 +208,14 @@ impl Command {
             let stdout = child.stdout.take().expect("Failed to capture stdout");
             let stderr = child.stderr.take().expect("Failed to capture stderr");
 
-            // Create channels to collect output
             let (stdout_tx, stdout_rx) = std::sync::mpsc::channel();
             let (stderr_tx, stderr_rx) = std::sync::mpsc::channel();
 
-            fn ssd() {}
-            // Spawn thread to read and print stdout
-            let stdout_thread = thread::spawn(move || {
-                let mut reader = stdout;
-                let mut output = Vec::new();
-                let mut buf = [0u8; 8192];
+            let stdout_thread = Self::spawn_pipe_thread(stdout, std::io::stdout(), stdout_tx);
+            let stderr_thread = Self::spawn_pipe_thread(stderr, std::io::stderr(), stderr_tx);
 
-                let mut out = std::io::stdout().lock();
-
-                loop {
-                    let n = match reader.read(&mut buf) {
-                        Ok(0) => break,
-                        Ok(n) => n,
-                        Err(_) => break,
-                    };
-
-                    output.extend_from_slice(&buf[..n]);
-                    let _ = out.write_all(&buf[..n]); // <-- bytes, not chars
-                    let _ = out.flush();
-                }
-
-                let _ = stdout_tx.send(output);
-            });
-
-            // Spawn thread to read and print stderr
-            let stderr_thread = thread::spawn(move || {
-                let mut reader = stderr;
-                let mut output = Vec::new();
-                let mut buf = [0u8; 8192];
-
-                let mut err = std::io::stderr().lock();
-
-                loop {
-                    let n = match reader.read(&mut buf) {
-                        Ok(0) => break,
-                        Ok(n) => n,
-                        Err(_) => break,
-                    };
-
-                    output.extend_from_slice(&buf[..n]);
-                    let _ = err.write_all(&buf[..n]);
-                    let _ = err.flush();
-                }
-
-                let _ = stderr_tx.send(output);
-            });
-
-            // Wait for the child process to complete
             let status = child.wait().expect("Failed to wait on child process");
 
-            // Wait for threads to finish and collect output
             stdout_thread.join().expect("Failed to join stdout thread");
             stderr_thread.join().expect("Failed to join stderr thread");
 
