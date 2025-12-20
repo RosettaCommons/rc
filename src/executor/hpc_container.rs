@@ -41,9 +41,7 @@ impl Executor {
             fs::create_dir_all(&d)?;
         }
 
-        let mut command = util::Command::new(engine.0);
-
-        command
+        let command = util::Command::new(engine.0)
             .arg("run")
             .args(options.split(' '))
             .arg(image_path.to_string_lossy())
@@ -51,11 +49,12 @@ impl Executor {
             .message(format!(
                 "Executing {} with arguments: {:?}",
                 self.app, spec.args
-            ));
+            ))
+            .live();
 
         println!("Running {command}");
 
-        let result = command.live().call();
+        let result = command.call();
 
         // println!("{}", result.stdout.bright_black());
         // eprintln!("{}", result.stderr.bright_red());

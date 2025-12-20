@@ -36,9 +36,7 @@ impl Executor {
             fs::create_dir_all(&d)?;
         }
 
-        let mut command = util::Command::new("docker");
-
-        command
+        let command = util::Command::new("docker")
             .arg("run")
             .args(options.split(' '))
             .arg(&spec.image.0)
@@ -46,11 +44,13 @@ impl Executor {
             .message(format!(
                 "Executing {} with arguments: {:?}",
                 self.app, spec.args
-            ));
+            ))
+            .live();
 
         println!("Running {command}");
 
-        let result = command.live().call();
+        //let result = command.live().call();
+        let result = command.call();
 
         // let command_line = format!(
         //     "docker run {options} {} {}",
