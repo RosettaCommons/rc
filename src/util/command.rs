@@ -12,81 +12,46 @@ use yansi::{Condition, Paint};
 
 #[derive(Debug, Clone, Default)]
 enum ExecutionMode {
-    /// Default: no live tee (or irrelevant for inherit).
+    /// Default: no live output
     #[default]
     Silent,
 
-    /// When capturing, also print live to current stdout/stderr.
+    /// Display live output during execution
     Live,
-    // PrintOutput {
-    //     live: bool,
-    // },
 }
 
-// impl Default for ExecutionMode {
-//     fn default() -> Self {
-//         ExecutionMode::PrintOutput { live: false }
-//     }
-// }
-
 #[derive(Debug, Clone)]
-pub struct Capture;
-
-#[allow(dead_code)]
-#[derive(Debug, Clone)]
-pub struct InheritStreams;
-
-#[derive(Debug, Clone)]
-pub struct Command<Mode> {
+pub struct Command {
     command: String,
     args: Vec<String>,
     message: Option<String>,
     cd: Option<PathBuf>,
     execution_mode: ExecutionMode,
-    _mode: PhantomData<Mode>,
 }
 
 #[derive(Debug)]
 pub struct CommandResults {
-    //command_line: String,
     pub stdout: String,
     pub stderr: String,
     pub success: bool,
 }
 
-impl<Mode> fmt::Display for Command<Mode> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let use_color = Condition::cached(f.alternate());
-        //let use_color = Condition::cached(true);
-
-        write!(
-            f,
-            "{}{}{} {}",
-            self.message
-                .as_deref()
-                .map_or("".into(), |m| format!("{m}\n"))
-                .green()
-                .whenever(use_color),
-            self.cd
-                .as_ref()
-                .map(|d| format!("cd {} && ", d.display()))
-                .unwrap_or_default()
-                .dim()
-                .whenever(use_color),
-            self.command.bright_white().whenever(use_color),
-            self.args
-                .iter()
-                .map(|a| shell_escape::escape(a.into()))
-                .collect::<Vec<_>>()
-                .join(" "),
-        )?;
-
-        Ok(())
-    }
-}
-
 #[allow(dead_code)]
-impl<Mode> Command<Mode> {
+impl Command {
+    pub fn new(command: impl Into<String>) -> Self {
+        Command {
+            command: command.into(),
+            args: Vec::new(),
+            cd: None,
+            message: None,
+            execution_mode: ExecutionMode::Silent,
+        }
+    }
+
+    pub fn shell(command_line: impl Into<String>) -> Self {
+        Self::new("sh").args(vec!["-c".into(), command_line.into()])
+    }
+
     pub fn message(mut self, message: impl Into<String>) -> Self {
         self.message = Some(message.into());
         self
@@ -122,71 +87,19 @@ impl<Mode> Command<Mode> {
         self
     }
 
-    // pub fn live_tee(mut self, on: bool) -> Self {
-    //     self.execution_mode = if on {
-    //         ExecutionMode::LiveTee
-    //     } else {
-    //         ExecutionMode::Normal
-    //     };
-    //     self
-    // }
+    fn build_process_command_and_log_details(&self) -> std::process::Command {
+        if let Some(msg) = &self.message {
+            println!("{}", msg);
+            println!("{self:#}"); // only print exact command line if `message` is set
+        }
 
-    fn build_process_command(&self) -> std::process::Command {
         let mut cmd = std::process::Command::new(&self.command);
         cmd.args(&self.args);
+
         if let Some(dir) = &self.cd {
             cmd.current_dir(dir);
         }
-        if let Some(msg) = &self.message {
-            println!("{}", msg);
-        }
         cmd
-    }
-
-    fn map_mode<New>(self) -> Command<New> {
-        Command {
-            command: self.command,
-            args: self.args,
-            message: self.message,
-            cd: self.cd,
-            execution_mode: self.execution_mode,
-            _mode: PhantomData,
-        }
-    }
-
-    pub fn capture(self) -> Command<Capture> {
-        self.map_mode()
-    }
-
-    // or maybe inherit_io?
-    pub fn inherit_streams(self) -> Command<InheritStreams> {
-        self.map_mode()
-    }
-}
-
-impl Command<Capture> {
-    pub fn new(command: impl Into<String>) -> Self {
-        Command {
-            command: command.into(),
-            args: Vec::new(),
-            message: None,
-            cd: None,
-            execution_mode: ExecutionMode::Silent,
-            _mode: PhantomData,
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn shell(command_line: impl Into<String>) -> Self {
-        Self::new("sh").args(vec!["-c".into(), command_line.into()])
-
-        // Command {
-        //     command: "sh".into(),
-        //     args: vec!["-c".into(), command_line.into()],
-        //     message: None,
-        //     cd: None,
-        //     _mode: PhantomData,
-        // }
     }
 
     fn spawn_pipe_thread<R, W>(
@@ -223,12 +136,7 @@ impl Command<Capture> {
     pub fn try_call(&self) -> CommandResults {
         println!("{self:#}");
 
-        // let mut cmd = std::process::Command::new(self.command.clone());
-        // cmd.args(self.args.clone());
-        // if let Some(dir) = &self.cd {
-        //     cmd.current_dir(dir);
-        // }
-        let mut cmd = self.build_process_command();
+        let mut cmd = self.build_process_command_and_log_details();
 
         if let ExecutionMode::Live = self.execution_mode {
             cmd.stdout(Stdio::piped());
@@ -267,23 +175,9 @@ impl Command<Capture> {
                 stderr: String::from_utf8_lossy(&o.stderr).into(),
                 success: o.status.success(),
             }
-            // if let ExecutionMode::PrintOutput { live: false } = self.execution_mode {
-            //     println!("{}", r.stdout);
-            //     eprintln!("{}", r.stderr);
-            // }
-
-            // let s = cmd
-            //     .spawn()
-            //     .unwrap_or_else(|_| panic!("command: {} failed to start", self.command.red()))
-            //     .wait()
-            //     .expect("failed to wait on child");
-            // CommandResults {
-            //     stdout: "".into(),
-            //     stderr: "".into(),
-            //     success: s.success(),
-            // }
         }
     }
+
     pub fn call(&self) -> CommandResults {
         let r = self.try_call();
         if !r.success {
@@ -295,14 +189,10 @@ impl Command<Capture> {
         }
         r
     }
-}
 
-#[allow(dead_code)]
-impl Command<InheritStreams> {
-    pub fn call(&self) -> Result<(), std::io::Error> {
-        println!("{self:#}");
-
-        let mut cmd = self.build_process_command();
+    /// Executes the command with inherited streams and returns a Result indicating success or failure.
+    pub fn exec(&self) -> Result<(), std::io::Error> {
+        let mut cmd = self.build_process_command_and_log_details();
 
         if matches!(self.execution_mode, ExecutionMode::Silent) {
             cmd.stdout(std::process::Stdio::null());
@@ -321,41 +211,36 @@ impl Command<InheritStreams> {
     }
 }
 
-// maybe Result<CommandResults, std::io::Error> instead? ie Error::new(ErrorKind::Other, "something went wrong");
-// pub fn try_call(&self) -> CommandResults {
-//     println!("{self:#}");
+impl fmt::Display for Command {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let use_color = Condition::cached(f.alternate());
+        //let use_color = Condition::cached(true);
 
-//     let mut cmd = std::process::Command::new(self.command.clone());
-//     cmd.args(self.args.clone());
-//     if let Some(dir) = &self.cd {
-//         cmd.current_dir(dir);
-//     }
+        write!(
+            f,
+            "{}{}{} {}",
+            self.message
+                .as_deref()
+                .map_or("".into(), |m| format!("{m}\n"))
+                .green()
+                .whenever(use_color),
+            self.cd
+                .as_ref()
+                .map(|d| format!("cd {} && ", d.display()))
+                .unwrap_or_default()
+                .dim()
+                .whenever(use_color),
+            self.command.bright_white().whenever(use_color),
+            self.args
+                .iter()
+                .map(|a| shell_escape::escape(a.into()))
+                .collect::<Vec<_>>()
+                .join(" "),
+        )?;
 
-//     if let ExecutionMode::PrintOutput { live: true } = self.execution_mode {
-//         let s = cmd
-//             .spawn()
-//             .unwrap_or_else(|_| panic!("command: {} failed to start", self.command.red()))
-//             .wait()
-//             .expect("failed to wait on child");
-//         CommandResults {
-//             stdout: "".into(),
-//             stderr: "".into(),
-//             success: s.success(),
-//         }
-//     } else {
-//         let o = cmd.output().expect("failed to execute process");
-//         let r = CommandResults {
-//             stdout: String::from_utf8_lossy(&o.stdout).into(),
-//             stderr: String::from_utf8_lossy(&o.stderr).into(),
-//             success: o.status.success(),
-//         };
-//         if let ExecutionMode::PrintOutput { live: false } = self.execution_mode {
-//             println!("{}", r.stdout);
-//             eprintln!("{}", r.stderr);
-//         }
-//         r
-//     }
-// }
+        Ok(())
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -409,13 +294,6 @@ mod tests {
     }
 
     #[test]
-    fn test_live_mode() {
-        let result = Command::shell(":").live().try_call();
-        assert!(result.success);
-        // stdout/stderr are empty in live mode in current implementation
-        assert_eq!(result.stdout, "");
-    }
-    #[test]
     #[should_panic(expected = "")]
     fn test_call_panic() {
         Command::new("ls")
@@ -425,27 +303,6 @@ mod tests {
 
     #[test]
     fn test_display_output() {
-        // fn strip_ansi_codes(s: &str) -> String {
-        //     let mut result = String::with_capacity(s.len());
-        //     let mut chars = s.chars().peekable();
-        //     while let Some(c) = chars.next() {
-        //         if c == '\x1b' && chars.peek() == Some(&'[') {
-        //             chars.next(); // consume '['
-        //             // Skip until a letter (ASCII A–Z or a–z)
-        //             while let Some(&next) = chars.peek() {
-        //                 if next.is_ascii_alphabetic() {
-        //                     chars.next(); // consume final letter
-        //                     break;
-        //                 }
-        //                 chars.next(); // consume part of escape
-        //             }
-        //             continue;
-        //         }
-        //         result.push(c);
-        //     }
-        //     result
-        // }
-
         let cmd = Command::new("echo")
             .arg("hello")
             .arg("world")
@@ -504,66 +361,18 @@ mod tests {
     }
 
     #[test]
-    fn test_inherit_streams_call_success() {
-        let result = Command::shell("echo test").inherit_streams().call();
+    fn test_exec_success() {
+        let result = Command::shell("echo test").exec();
         assert!(result.is_ok());
     }
 
     #[test]
-    fn test_inherit_streams_call_failure() {
-        let result = Command::shell("exit 1").inherit_streams().call();
+    fn test_exec_failure() {
+        let result = Command::shell("exit 1").exec();
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err().to_string(),
             "command failed with non-zero exit code"
         );
-    }
-
-    #[test]
-    fn test_inherit_streams_silent_mode() {
-        // In silent mode, stdout/stderr should be redirected to null
-        let result = Command::shell("echo should_not_see_this")
-            .inherit_streams()
-            .silent()
-            .call();
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_inherit_streams_live_mode() {
-        // In live mode (non-silent), stdout/stderr should be inherited
-        let result = Command::shell("echo visible_output")
-            .inherit_streams()
-            .live()
-            .call();
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    #[should_panic(expected = "failed to start")]
-    fn test_inherit_streams_invalid_command() {
-        let _ = Command::new("this_command_does_not_exist_12345")
-            .inherit_streams()
-            .call();
-    }
-
-    #[test]
-    fn test_inherit_streams_with_args() {
-        let result = Command::new("sh")
-            .arg("-c")
-            .arg("exit 0")
-            .inherit_streams()
-            .call();
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_inherit_streams_with_cd() {
-        let result = Command::new("pwd")
-            .cd("src")
-            .inherit_streams()
-            .silent()
-            .call();
-        assert!(result.is_ok());
     }
 }
