@@ -10,13 +10,9 @@ use std::{
 
 use yansi::{Condition, Paint};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 enum ExecutionMode {
-    /// Default: no live output
-    #[default]
     Silent,
-
-    /// Display live output during execution
     Live,
 }
 
@@ -29,7 +25,7 @@ pub struct Command {
     execution_mode: ExecutionMode,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CommandResults {
     pub stdout: String,
     pub stderr: String,
@@ -88,10 +84,11 @@ impl Command {
     }
 
     fn build_process_command_and_log_details(&self) -> std::process::Command {
-        if let Some(msg) = &self.message {
-            println!("{}", msg);
-            println!("{self:#}"); // only print exact command line if `message` is set
-        }
+        println!("{self:#}");
+        // if let Some(msg) = &self.message {
+        //     println!("{}", msg);
+        //     println!("{self:#}"); // only print exact command line if `message` is set
+        // }
 
         let mut cmd = std::process::Command::new(&self.command);
         cmd.args(&self.args);
@@ -134,7 +131,7 @@ impl Command {
 
     /// Execute the command and capture both stdout and stderr while simultaneously printing them live if live is true
     pub fn try_call(&self) -> CommandResults {
-        println!("{self:#}");
+        // println!("{self:#}");
 
         let mut cmd = self.build_process_command_and_log_details();
 
@@ -192,6 +189,8 @@ impl Command {
 
     /// Executes the command with inherited streams and returns a Result indicating success or failure.
     pub fn exec(&self) -> Result<(), std::io::Error> {
+        // println!("{self:#}");
+
         let mut cmd = self.build_process_command_and_log_details();
 
         if matches!(self.execution_mode, ExecutionMode::Silent) {

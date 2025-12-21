@@ -14,7 +14,14 @@ impl Executor {
     pub(super) fn execute_with_docker(&self, spec: RunSpec) -> Result<()> {
         assert!(matches!(self.engine, ContainerEngine::Docker));
 
-        self.log_execute_info(&spec);
+        util::Command::shell(format!(
+            "docker image inspect {0} >/dev/null 2>&1 || docker image pull {0}",
+            spec.image.0
+        ))
+        .live()
+        .exec()?;
+
+        //self.log_execute_info(&spec);
 
         let mut options = format!("--volume {}:/w --workdir /w", self.working_dir.display());
 
@@ -41,13 +48,11 @@ impl Executor {
             .args(options.split(' '))
             .arg(&spec.image.0)
             .args(spec.args.clone())
-            .message(format!(
-                "Executing {} with arguments: {:?}",
-                self.app, spec.args
-            ))
+            // .message(format!(
+            //     "Executing {} with arguments: {:?}",
+            //     self.app, spec.args
+            // ))
             .live();
-
-        println!("Running {command}");
 
         //let result = command.live().call();
         let result = command.call();

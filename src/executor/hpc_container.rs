@@ -22,7 +22,7 @@ impl Executor {
             ContainerEngine::Singularity | ContainerEngine::Apptainer
         ));
 
-        self.log_execute_info(&spec);
+        //self.log_execute_info(&spec);
 
         let engine = HpcContainerEngine(self.engine.to_string());
 
@@ -46,13 +46,8 @@ impl Executor {
             .args(options.split(' '))
             .arg(image_path.to_string_lossy())
             .args(spec.args.clone())
-            .message(format!(
-                "Executing {} with arguments: {:?}",
-                self.app, spec.args
-            ))
+            //.message("")
             .live();
-
-        println!("Running {command}");
 
         let result = command.call();
 
@@ -109,7 +104,8 @@ impl Executor {
                     &format!("docker://{}", image.0),
                 ])
                 .live()
-                .call();
+                .exec()
+                .expect("error building image");
         }
 
         image_path

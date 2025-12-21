@@ -13,6 +13,7 @@ use crate::{
 };
 
 pub struct Executor {
+    #[allow(dead_code)]
     app: App,
     working_dir: PathBuf,
     engine: ContainerEngine,
@@ -39,15 +40,15 @@ impl Executor {
         }
     }
 
-    fn log_execute_info(&self, spec: &RunSpec) {
-        println!(
-            "Running {} container: {} working directory: {:?}",
-            self.engine, spec.image.0, self.working_dir
-        );
-        if !spec.args.is_empty() {
-            println!("With arguments: {:?}", spec.args);
-        }
-    }
+    // fn log_execute_info(&self, spec: &RunSpec) {
+    //     println!(
+    //         "Running {} container: {} working directory: {:?}",
+    //         self.engine, spec.image.0, self.working_dir
+    //     );
+    //     if !spec.args.is_empty() {
+    //         println!("With arguments: {:?}", spec.args);
+    //     }
+    // }
 }
 
 pub fn run(
@@ -57,16 +58,18 @@ pub fn run(
     working_dir: PathBuf,
 ) -> Result<()> {
     println!(
-        "Running app: {} in directory: {}",
+        "Running app: {} in directory: {}{}",
         app.green(),
-        working_dir.display()
+        working_dir.display(),
+        if app_args.is_empty() {
+            "".into()
+        } else {
+            format!(
+                " with arguments: {}",
+                format!("{:?}", app_args).bright_blue()
+            )
+        }
     );
-    if !app_args.is_empty() {
-        println!(
-            "With arguments: {}",
-            format!("{:?}", app_args).bright_blue()
-        );
-    }
 
     Executor::new(app.to_owned(), *container_engine, working_dir).execute(app.run_spec(app_args))
 }
