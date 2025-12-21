@@ -99,40 +99,31 @@ impl Command {
         cmd
     }
 
-    fn spawn_pipe_thread<R, W>(
-        mut reader: R,
-        sink: W,
-        tx: Sender<Vec<u8>>,
-    ) -> thread::JoinHandle<()>
+    fn pipe_to_sink<R, W>(mut reader: R, mut sink: W) -> Vec<u8>
     where
-        R: Read + Send + 'static,
-        W: Write + Send + 'static,
+        R: Read,
+        W: Write,
     {
-        thread::spawn(move || {
-            let mut output = Vec::new();
-            let mut buf = [0u8; 8192];
-            let mut sink = sink;
+        let mut output = Vec::new();
+        let mut buf = [0u8; 8192];
 
-            loop {
-                let n = match reader.read(&mut buf) {
-                    Ok(0) => break,
-                    Ok(n) => n,
-                    Err(_) => break,
-                };
+        loop {
+            let n = match reader.read(&mut buf) {
+                Ok(0) => break,
+                Ok(n) => n,
+                Err(_) => break,
+            };
 
-                output.extend_from_slice(&buf[..n]);
-                let _ = sink.write_all(&buf[..n]);
-            }
+            output.extend_from_slice(&buf[..n]);
+            let _ = sink.write_all(&buf[..n]);
+        }
 
-            let _ = sink.flush();
-            let _ = tx.send(output);
-        })
+        let _ = sink.flush();
+        output
     }
 
     /// Execute the command and capture both stdout and stderr while simultaneously printing them live if live is true
     pub fn try_call(&self) -> CommandResults {
-        // println!("{self:#}");
-
         let mut cmd = self.build_process_command_and_log_details();
 
         if let ExecutionMode::Live = self.execution_mode {
@@ -143,28 +134,24 @@ impl Command {
                 .spawn()
                 .unwrap_or_else(|_| panic!("Command: {} failed to start", self.command.red()));
 
-            let stdout = child.stdout.take().expect("Failed to capture stdout");
-            let stderr = child.stderr.take().expect("Failed to capture stderr");
+            let child_stdout_tx = child.stdout.take().expect("Failed to capture stdout");
+            let child_stderr_tx = child.stderr.take().expect("Failed to capture stderr");
 
-            let (stdout_tx, stdout_rx) = std::sync::mpsc::channel();
-            let (stderr_tx, stderr_rx) = std::sync::mpsc::channel();
+            thread::scope(|s| {
+                let stdout_h = s.spawn(|| Self::pipe_to_sink(child_stdout_tx, std::io::stdout()));
+                let stderr_h = s.spawn(|| Self::pipe_to_sink(child_stderr_tx, std::io::stderr()));
 
-            let stdout_thread = Self::spawn_pipe_thread(stdout, std::io::stdout(), stdout_tx);
-            let stderr_thread = Self::spawn_pipe_thread(stderr, std::io::stderr(), stderr_tx);
+                let status = child.wait().expect("Failed to wait on child process");
 
-            let status = child.wait().expect("Failed to wait on child process");
+                let stdout_bytes = stdout_h.join().expect("stdout thread panicked");
+                let stderr_bytes = stderr_h.join().expect("stderr thread panicked");
 
-            stdout_thread.join().expect("Failed to join stdout thread");
-            stderr_thread.join().expect("Failed to join stderr thread");
-
-            let stdout_bytes = stdout_rx.recv().unwrap_or_default();
-            let stderr_bytes = stderr_rx.recv().unwrap_or_default();
-
-            CommandResults {
-                stdout: String::from_utf8_lossy(&stdout_bytes).into(),
-                stderr: String::from_utf8_lossy(&stderr_bytes).into(),
-                success: status.success(),
-            }
+                CommandResults {
+                    stdout: String::from_utf8_lossy(&stdout_bytes).into(),
+                    stderr: String::from_utf8_lossy(&stderr_bytes).into(),
+                    success: status.success(),
+                }
+            })
         } else {
             let o = cmd.output().expect("Failed to execute process");
             CommandResults {
