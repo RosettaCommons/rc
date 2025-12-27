@@ -1,14 +1,15 @@
 #![allow(unused_imports)]
 
 mod command;
+mod dir_guard;
 mod yansi;
-
-pub use command::Command;
-
-pub use yansi::{Paint, PaintExt};
 
 use std::io::{self, Write};
 use std::time::Duration;
+
+pub use command::Command;
+pub use dir_guard::ensure_dir_signature;
+pub use yansi::{Paint, PaintExt};
 
 #[allow(dead_code)]
 /// Fancy sleep function with a countdown message.

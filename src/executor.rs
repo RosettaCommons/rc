@@ -1,5 +1,6 @@
 mod docker;
 mod hpc_container;
+mod native;
 
 use std::path::{Path, PathBuf};
 
@@ -36,7 +37,7 @@ impl Executor {
                 self.execute_with_hpc_container_engine(spec)
             }
 
-            ContainerEngine::None => todo!("ContainerEngine::None"),
+            ContainerEngine::None => self.execute_native(spec),
         }
     }
 

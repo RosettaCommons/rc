@@ -112,7 +112,7 @@ impl Executor {
     }
 
     fn images_root(&self) -> PathBuf {
-        let root = home_dir().unwrap().join(".cache/rosettacommons/rc");
+        let root = home_dir().unwrap().join(".cache/rosettacommons/rc/hpc");
         std::fs::create_dir_all(&root).unwrap();
         root
     }
