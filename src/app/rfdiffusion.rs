@@ -1,4 +1,4 @@
-use crate::app::RunSpec;
+use crate::{app::RunSpec, util::include_asset};
 
 pub fn spec(mut app_args: Vec<String>) -> RunSpec {
     app_args.splice(
@@ -11,4 +11,5 @@ pub fn spec(mut app_args: Vec<String>) -> RunSpec {
     RunSpec::new("rosettacommons/rfdiffusion", app_args)
         .scratch("/app/RFdiffusion/schedules")
         .working_dir("/w")
+        .pixi(include_asset!("pixi/rfdiffusion.toml"))
 }

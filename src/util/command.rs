@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::path::Path;
 use std::sync::mpsc::Sender;
 use std::{
     fmt::{self},
@@ -67,7 +67,7 @@ impl Command {
         self
     }
 
-    pub fn cd(mut self, path: impl AsRef<str>) -> Self {
+    pub fn cd(mut self, path: impl AsRef<Path>) -> Self {
         let path = std::fs::canonicalize(path.as_ref()).unwrap();
         self.cd = Some(path);
         self

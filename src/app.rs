@@ -66,8 +66,10 @@ pub enum MountRole {
 pub struct RunSpec {
     pub image: Image,
     pub args: Vec<String>,
-    //pub scratch: Option<PathBuf>,
+
     pub mounts: HashMap<MountRole, String>,
+
+    pub pixi: Option<String>,
 }
 
 impl RunSpec {
@@ -76,6 +78,7 @@ impl RunSpec {
             image: Image(image.into()),
             args,
             mounts: HashMap::new(),
+            pixi: None,
         }
     }
     pub fn scratch(mut self, p: impl Into<String>) -> Self {
@@ -84,6 +87,11 @@ impl RunSpec {
     }
     pub fn working_dir(mut self, p: impl Into<String>) -> Self {
         self.mounts.insert(MountRole::WorkingDir, p.into());
+        self
+    }
+
+    pub fn pixi(mut self, p: impl Into<String>) -> Self {
+        self.pixi = Some(p.into());
         self
     }
 }

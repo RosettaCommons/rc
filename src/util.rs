@@ -29,3 +29,10 @@ pub fn sleep(message: impl AsRef<str>, seconds: usize) {
     print!("\r{:width$}\r", "", width = max_len);
     io::stdout().flush().unwrap();
 }
+
+macro_rules! include_asset {
+    ($path:literal) => {
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/", $path))
+    };
+}
+pub(crate) use include_asset;
