@@ -5,23 +5,20 @@ mod native;
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use yansi::Paint;
 
-use super::App;
 use crate::{
-    ContainerEngine,
-    app::{Image, RunSpec},
+    app::{App, Image, RunSpec},
+    run::ContainerEngine,
 };
 
 pub struct Executor {
-    #[allow(dead_code)]
     app: App,
     working_dir: PathBuf,
     engine: ContainerEngine,
 }
 
 impl Executor {
-    fn new(app: App, engine: ContainerEngine, working_dir: PathBuf) -> Self {
+    pub fn new(app: App, engine: ContainerEngine, working_dir: PathBuf) -> Self {
         Executor {
             app,
             working_dir,
@@ -50,29 +47,6 @@ impl Executor {
     //         println!("With arguments: {:?}", spec.args);
     //     }
     // }
-}
-
-pub fn run(
-    app: &App,
-    app_args: Vec<String>,
-    container_engine: &ContainerEngine,
-    working_dir: PathBuf,
-) -> Result<()> {
-    println!(
-        "Running app: {} in directory: {}{}",
-        app.green(),
-        working_dir.display(),
-        if app_args.is_empty() {
-            "".into()
-        } else {
-            format!(
-                " with arguments: {}",
-                format!("{:?}", app_args).bright_blue()
-            )
-        }
-    );
-
-    Executor::new(app.to_owned(), *container_engine, working_dir).execute(app.run_spec(app_args))
 }
 
 struct Telemetry {

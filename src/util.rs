@@ -2,6 +2,7 @@
 
 mod command;
 mod dir_guard;
+pub mod dirs;
 mod yansi;
 
 use std::io::{self, Write};

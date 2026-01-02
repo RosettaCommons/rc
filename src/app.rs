@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use clap::ValueEnum;
 
@@ -69,7 +69,7 @@ pub struct RunSpec {
 
     pub mounts: HashMap<MountRole, String>,
 
-    pub pixi: Option<String>,
+    pub pixi: Option<Cow<'static, str>>,
 }
 
 impl RunSpec {
@@ -90,7 +90,7 @@ impl RunSpec {
         self
     }
 
-    pub fn pixi(mut self, p: impl Into<String>) -> Self {
+    pub fn pixi(mut self, p: impl Into<Cow<'static, str>>) -> Self {
         self.pixi = Some(p.into());
         self
     }

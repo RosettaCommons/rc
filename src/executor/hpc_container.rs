@@ -1,10 +1,10 @@
-use std::{env::home_dir, fs, path::PathBuf};
+use std::{fs, path::PathBuf};
 
 use crate::{
-    ContainerEngine,
     app::{MountRole, RunSpec},
     executor::{Executor, Image, Telemetry},
-    util::{self, Command},
+    run,
+    util::{self, Command, dirs},
 };
 
 use anyhow::Result;
@@ -19,7 +19,7 @@ impl Executor {
     pub(super) fn execute_with_hpc_container_engine(&self, spec: RunSpec) -> Result<()> {
         assert!(matches!(
             self.engine,
-            ContainerEngine::Singularity | ContainerEngine::Apptainer
+            run::ContainerEngine::Singularity | run::ContainerEngine::Apptainer
         ));
 
         //self.log_execute_info(&spec);
@@ -112,7 +112,7 @@ impl Executor {
     }
 
     fn images_root(&self) -> PathBuf {
-        let root = home_dir().unwrap().join(".cache/rosettacommons/rc/hpc");
+        let root = dirs::cache_root().join("hpc");
         std::fs::create_dir_all(&root).unwrap();
         root
     }

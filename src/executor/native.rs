@@ -4,13 +4,14 @@ use anyhow::anyhow;
 use home::home_dir;
 use yansi::Paint;
 
+use crate::run;
 use crate::util::Command;
 use crate::util::ensure_dir_signature;
-use crate::{ContainerEngine, app::RunSpec, executor::Executor};
+use crate::{app::RunSpec, executor::Executor};
 
 impl Executor {
     pub(super) fn execute_native(&self, spec: RunSpec) -> Result<()> {
-        assert!(matches!(self.engine, ContainerEngine::None));
+        assert!(matches!(self.engine, run::ContainerEngine::None));
 
         let recipe = spec
             .pixi
@@ -23,21 +24,25 @@ impl Executor {
             .unwrap()
             .join(format!(".cache/rosettacommons/rc/native/{}.pixi", self.app));
 
-        ensure_dir_signature(&pixi_evn_root, &[&spec.image.0, &recipe], |d| {
-            std::fs::write(d.join("pixi.toml"), &recipe)?;
-            Command::new("pixi")
-                .cd(d)
-                .arg("run")
-                .arg("setup")
-                .live()
-                .exec()?;
-            Ok(())
-        })?;
+        ensure_dir_signature(
+            &pixi_evn_root,
+            &[spec.image.0.as_ref(), recipe.as_ref()],
+            |d| {
+                std::fs::write(d.join("pixi.toml"), recipe.as_ref())?;
+                Command::new("pixi")
+                    .cd(d)
+                    .arg("run")
+                    .arg("setup")
+                    .live()
+                    .exec()?;
+                Ok(())
+            },
+        )?;
 
         Ok(())
     }
 
-    /// Check if Pixi is installed
+    /// Check if Pixi is installed, fail if not
     fn check_if_pixi_is_installed() -> Result<()> {
         match which::which("pixi") {
             Ok(_) => Ok(()),

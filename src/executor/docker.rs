@@ -4,15 +4,14 @@ use anyhow::Result;
 use yansi::Paint;
 
 use crate::{
-    ContainerEngine,
     app::{MountRole, RunSpec},
     executor::{Executor, Telemetry},
-    util,
+    run, util,
 };
 
 impl Executor {
     pub(super) fn execute_with_docker(&self, spec: RunSpec) -> Result<()> {
-        assert!(matches!(self.engine, ContainerEngine::Docker));
+        assert!(matches!(self.engine, run::ContainerEngine::Docker));
 
         util::Command::shell(format!(
             "docker image inspect {0} >/dev/null 2>&1 || docker image pull {0}",

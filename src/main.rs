@@ -1,14 +1,16 @@
 mod app;
 mod executor;
+mod run;
 mod util;
 
-use std::{path::PathBuf, process};
+use std::path::PathBuf;
+use std::process;
 
 use anyhow::Result;
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
 use yansi::Paint;
 
-use app::App;
+use crate::app::App;
 
 /// A command line tool to run various Rosetta applications
 #[derive(Parser, Debug)]
@@ -25,15 +27,6 @@ struct Args {
     /// Verbose mode
     #[arg(short, long, global = true)]
     verbose: bool,
-}
-
-#[derive(ValueEnum, Clone, Copy, Debug, strum::Display)]
-#[strum(serialize_all = "lowercase")] //  "kebab-case"
-enum ContainerEngine {
-    Docker,
-    Singularity,
-    Apptainer,
-    None,
 }
 
 #[derive(Subcommand, Debug)]
@@ -67,8 +60,65 @@ enum Commands {
         working_dir: Option<PathBuf>,
 
         #[arg(short = 'e', long, default_value = "docker")]
-        container_engine: ContainerEngine,
+        container_engine: run::ContainerEngine,
     },
+
+    Config {
+        #[command(subcommand)]
+        config_command: ConfigCmd,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum ConfigCmd {
+    /// Show the effective configuration
+    Show(ConfigShowArgs),
+
+    /// Get a single configuration value
+    Get {
+        /// Dotted key path, e.g. `cache.root`
+        key: String,
+
+        /// Output as JSON (useful for scripting)
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Set a configuration value
+    Set {
+        /// Dotted key path, e.g. `cache.root`
+        key: String,
+
+        /// Value to set (stringly-typed; you parse/validate per key)
+        value: String,
+    },
+
+    /// Remove a configuration override (fall back to defaults)
+    Unset {
+        /// Dotted key path, e.g. `cache.root`
+        key: String,
+    },
+
+    /// Open the config file in $EDITOR
+    Edit,
+
+    /// Print the config file path
+    Path,
+}
+
+#[derive(clap::Args, Debug)]
+struct ConfigShowArgs {
+    /// Output as JSON (useful for scripting)
+    #[arg(long)]
+    json: bool,
+
+    /// Output as TOML (optional; pick what you support)
+    #[arg(long, conflicts_with = "json")]
+    toml: bool,
+
+    /// Include where each value came from (defaults/env/file)
+    #[arg(long)]
+    origin: bool,
 }
 
 fn main() -> Result<()> {
@@ -100,8 +150,12 @@ fn main() -> Result<()> {
                 .canonicalize()
                 .unwrap();
 
-            executor::run(app, app_args.clone(), container_engine, working_dir)
+            run::run(app, app_args.clone(), container_engine, working_dir)
         }
+        Some(Commands::Config { config_command: _ }) => {
+            todo!();
+        }
+
         None => {
             eprintln!("Error: No command specified");
             eprintln!("Use --help to see available commands");
