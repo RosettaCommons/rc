@@ -1,17 +1,14 @@
 use crate::app::{ContainerRunSpec, RunSpec};
 
 pub fn spec(app_args: Vec<String>) -> RunSpec {
-    let container = ContainerRunSpec::new(
+    let container = ContainerRunSpec::with_prefixed_args(
         "rosettacommons/ligandmpnn",
         [
             "--out_folder=/w",
             "--checkpoint_protein_mpnn",
             "/app/ligandmpnn/model_params/proteinmpnn_v_48_020.pt",
-        ]
-        .into_iter()
-        .map(Into::into)
-        .chain(app_args)
-        .collect(),
+        ],
+        app_args,
     )
     .working_dir("/w");
 

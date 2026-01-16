@@ -63,7 +63,7 @@ pub enum MountRole {
     Scratch,
 }
 
-enum IoSpec {
+pub enum IoSpec {
     InputDir(PathBuf),
     InputDirOption(String),
 }
@@ -76,8 +76,8 @@ pub struct ContainerRunSpec {
 
 pub struct NativeRunSpec {
     pub pixi: Cow<'static, str>,
+    pub io_spec: IoSpec,
     pub args: Vec<String>,
-    //pub io_spec: IoSpec,
 }
 
 pub struct RunSpec {
@@ -93,6 +93,30 @@ impl ContainerRunSpec {
             mounts: HashMap::new(),
         }
     }
+    pub fn with_prefixed_args<I1, I2, S1, S2>(
+        image: impl Into<String>,
+        prefixes: I1,
+        args: I2,
+    ) -> Self
+    where
+        I1: IntoIterator<Item = S1>,
+        I2: IntoIterator<Item = S2>,
+        S1: Into<String>,
+        S2: Into<String>,
+    {
+        let full_args: Vec<String> = prefixes
+            .into_iter()
+            .map(Into::into)
+            .chain(args.into_iter().map(Into::into))
+            .collect();
+
+        Self {
+            image: Image(image.into()),
+            args: full_args,
+            mounts: HashMap::new(),
+        }
+    }
+
     pub fn scratch(mut self, p: impl Into<String>) -> Self {
         self.mounts.insert(MountRole::Scratch, p.into());
         self
@@ -104,16 +128,17 @@ impl ContainerRunSpec {
 }
 
 impl NativeRunSpec {
-    pub fn new(pixi: impl Into<Cow<'static, str>>, args: Vec<String>) -> Self {
+    pub fn new(pixi: impl Into<Cow<'static, str>>, io_spec: IoSpec, args: Vec<String>) -> Self {
         Self {
             pixi: pixi.into(),
+            io_spec,
             args,
         }
     }
-    pub fn pixi(mut self, p: impl Into<Cow<'static, str>>) -> Self {
-        self.pixi = p.into();
-        self
-    }
+    // pub fn pixi(mut self, p: impl Into<Cow<'static, str>>) -> Self {
+    //     self.pixi = p.into();
+    //     self
+    // }
 }
 
 impl RunSpec {
@@ -134,5 +159,64 @@ impl App {
             App::Ligandmpnn => ligandmpnn::spec(app_args),
             App::Picap => picap::spec(app_args),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_with_prefixed_args() {
+        let prefixes = vec!["--prefix1", "--prefix2"];
+        let args = vec!["arg1", "arg2", "arg3"];
+
+        let spec = ContainerRunSpec::with_prefixed_args(
+            "test/image:latest",
+            prefixes.clone(),
+            args.clone(),
+        );
+
+        assert_eq!(spec.image.0, "test/image:latest");
+        assert_eq!(
+            spec.args,
+            vec!["--prefix1", "--prefix2", "arg1", "arg2", "arg3"]
+        );
+        assert_eq!(spec.mounts.len(), 0);
+    }
+
+    #[test]
+    fn test_with_prefixed_args_empty_prefixes() {
+        let prefixes: Vec<String> = vec![];
+        let args = vec!["arg1".to_string(), "arg2".to_string()];
+
+        let spec = ContainerRunSpec::with_prefixed_args("test/image:v1", prefixes, args.clone());
+
+        assert_eq!(spec.image.0, "test/image:v1");
+        assert_eq!(spec.args, vec!["arg1", "arg2"]);
+    }
+
+    #[test]
+    fn test_with_prefixed_args_empty_args() {
+        let prefixes = vec!["--flag".to_string()];
+        let args: Vec<String> = vec![];
+
+        let spec = ContainerRunSpec::with_prefixed_args("test/image", prefixes.clone(), args);
+
+        assert_eq!(spec.image.0, "test/image");
+        assert_eq!(spec.args.len(), 1);
+        assert_eq!(spec.args[0], "--flag");
+    }
+
+    #[test]
+    fn test_with_prefixed_args_both_empty() {
+        let prefixes: Vec<String> = vec![];
+        let args: Vec<String> = vec![];
+
+        let spec = ContainerRunSpec::with_prefixed_args("empty/image", prefixes, args);
+
+        assert_eq!(spec.image.0, "empty/image");
+        assert_eq!(spec.args.len(), 0);
+        assert!(spec.mounts.is_empty());
     }
 }
