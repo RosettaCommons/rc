@@ -26,13 +26,13 @@ impl Executor {
 
         let engine = HpcContainerEngine(self.engine.to_string());
 
-        let image_path = self.build_image(&engine, &spec.image);
+        let image_path = self.build_image(&engine, &spec.container.image);
 
         let mut options = format!("--bind {}:/w --pwd /w", self.working_dir.display());
 
         let t = Telemetry::new(&self.working_dir);
 
-        if let Some(scratch) = &spec.mounts.get(&MountRole::Scratch) {
+        if let Some(scratch) = &spec.container.mounts.get(&MountRole::Scratch) {
             let d = t.scratch_dir();
             options.push_str(&format!(
                 " --bind {}:/{scratch}",
@@ -45,7 +45,7 @@ impl Executor {
             .arg("run")
             .args(options.split(' '))
             .arg(image_path.to_string_lossy())
-            .args(spec.args.clone())
+            .args(spec.container.args.clone())
             //.message("")
             .live();
 

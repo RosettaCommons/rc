@@ -1,6 +1,15 @@
-use crate::app::RunSpec;
+use crate::app::{ContainerRunSpec, RunSpec};
 
-pub fn spec(mut app_args: Vec<String>) -> RunSpec {
-    app_args.splice(0..0, ["--out_folder=/w".into()]);
-    RunSpec::new("rosettacommons/proteinmpnn", app_args).working_dir("/w")
+pub fn spec(app_args: Vec<String>) -> RunSpec {
+    let container = ContainerRunSpec::new(
+        "rosettacommons/proteinmpnn",
+        ["--out_folder=/w"]
+            .into_iter()
+            .map(Into::into)
+            .chain(app_args)
+            .collect(),
+    )
+    .working_dir("/w");
+
+    RunSpec::new(container, None)
 }

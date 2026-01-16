@@ -1,4 +1,4 @@
-use crate::app::RunSpec;
+use crate::app::{ContainerRunSpec, RunSpec};
 
 pub fn spec(mut app_args: Vec<String>) -> RunSpec {
     assert!(
@@ -18,5 +18,7 @@ pub fn spec(mut app_args: Vec<String>) -> RunSpec {
     app_args.splice(1..1, ["--output_path=/w".into()]);
     app_args[0].insert_str(0, "/app/proteinmpnn/helper_scripts/");
 
-    RunSpec::new("rosettacommons/proteinmpnn", app_args).working_dir("/w")
+    let container = ContainerRunSpec::new("rosettacommons/proteinmpnn", app_args).working_dir("/w");
+
+    RunSpec::new(container, None)
 }

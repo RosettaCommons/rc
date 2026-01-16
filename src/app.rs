@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::{borrow::Cow, collections::HashMap, path::PathBuf};
 
 use clap::ValueEnum;
 
@@ -63,22 +63,34 @@ pub enum MountRole {
     Scratch,
 }
 
-pub struct RunSpec {
-    pub image: Image,
-    pub args: Vec<String>,
-
-    pub mounts: HashMap<MountRole, String>,
-
-    pub pixi: Option<Cow<'static, str>>,
+enum IoSpec {
+    InputDir(PathBuf),
+    InputDirOption(String),
 }
 
-impl RunSpec {
+pub struct ContainerRunSpec {
+    pub image: Image,
+    pub args: Vec<String>,
+    pub mounts: HashMap<MountRole, String>,
+}
+
+pub struct NativeRunSpec {
+    pub pixi: Cow<'static, str>,
+    pub args: Vec<String>,
+    //pub io_spec: IoSpec,
+}
+
+pub struct RunSpec {
+    pub container: ContainerRunSpec,
+    pub native: Option<NativeRunSpec>,
+}
+
+impl ContainerRunSpec {
     pub fn new(image: impl Into<String>, args: Vec<String>) -> Self {
         Self {
             image: Image(image.into()),
             args,
             mounts: HashMap::new(),
-            pixi: None,
         }
     }
     pub fn scratch(mut self, p: impl Into<String>) -> Self {
@@ -89,10 +101,24 @@ impl RunSpec {
         self.mounts.insert(MountRole::WorkingDir, p.into());
         self
     }
+}
 
+impl NativeRunSpec {
+    pub fn new(pixi: impl Into<Cow<'static, str>>, args: Vec<String>) -> Self {
+        Self {
+            pixi: pixi.into(),
+            args,
+        }
+    }
     pub fn pixi(mut self, p: impl Into<Cow<'static, str>>) -> Self {
-        self.pixi = Some(p.into());
+        self.pixi = p.into();
         self
+    }
+}
+
+impl RunSpec {
+    pub fn new(container: ContainerRunSpec, native: Option<NativeRunSpec>) -> Self {
+        Self { container, native }
     }
 }
 

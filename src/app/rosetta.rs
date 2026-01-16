@@ -1,5 +1,8 @@
-use crate::app::RunSpec;
+use crate::app::{ContainerRunSpec, RunSpec};
 
 pub fn spec(app_args: Vec<String>) -> RunSpec {
-    RunSpec::new("rosettacommons/rosetta:serial", app_args).working_dir("/w")
+    let container =
+        ContainerRunSpec::new("rosettacommons/rosetta:serial", app_args).working_dir("/w");
+
+    RunSpec::new(container, None)
 }

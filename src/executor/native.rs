@@ -14,8 +14,9 @@ impl Executor {
         assert!(matches!(self.engine, run::ContainerEngine::None));
 
         let recipe = spec
-            .pixi
-            .with_context(|| format!("Pixi recipe for app '{}' was not found", self.app))?;
+            .native
+            .with_context(|| format!("Pixi recipe for app '{}' was not found", self.app))?
+            .pixi;
 
         Self::check_if_pixi_is_installed()?;
 
@@ -26,7 +27,7 @@ impl Executor {
 
         ensure_dir_signature(
             &pixi_evn_root,
-            &[spec.image.0.as_ref(), recipe.as_ref()],
+            &[spec.container.image.0.as_ref(), recipe.as_ref()],
             |d| {
                 std::fs::write(d.join("pixi.toml"), recipe.as_ref())?;
                 Command::new("pixi")
