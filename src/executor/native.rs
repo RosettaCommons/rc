@@ -1,4 +1,3 @@
-use anyhow::Context;
 use anyhow::Result;
 use anyhow::anyhow;
 use home::home_dir;
@@ -7,15 +6,14 @@ use yansi::Paint;
 use crate::run;
 use crate::util::Command;
 use crate::util::ensure_dir_signature;
-use crate::{app::RunSpec, executor::Executor};
+use crate::{app::NativeRunSpec, executor::Executor};
 
 impl Executor {
-    pub(super) fn execute_native(&self, spec: RunSpec) -> Result<()> {
+    pub(super) fn execute_native(&self, spec: NativeRunSpec) -> Result<()> {
         assert!(matches!(self.engine, run::ContainerEngine::None));
 
         let recipe = spec
-            .native
-            .with_context(|| format!("Pixi recipe for app '{}' was not found", self.app))?
+            //.with_context(|| format!("Pixi recipe for app '{}' was not found", self.app))?
             .pixi;
 
         Self::check_if_pixi_is_installed()?;
@@ -23,11 +21,11 @@ impl Executor {
         //let pixi_evn_root = self.working_dir.join(format!("{}.pixi", self.app));
         let pixi_evn_root = home_dir()
             .unwrap()
-            .join(format!(".cache/rosettacommons/rc/native/{}.pixi", self.app));
+            .join(format!(".cache/rosettacommons/rc/native/{}", self.app));
 
         ensure_dir_signature(
             &pixi_evn_root,
-            &[spec.container.image.0.as_ref(), recipe.as_ref()],
+            &[self.app.to_string().as_ref(), recipe.as_ref()],
             |d| {
                 std::fs::write(d.join("pixi.toml"), recipe.as_ref())?;
                 Command::new("pixi")
@@ -39,6 +37,15 @@ impl Executor {
                 Ok(())
             },
         )?;
+
+        Command::new("pixi")
+            .cd(&pixi_evn_root)
+            .arg("run")
+            .arg("execute")
+            // .arg(shell_escape::escape(spec.args.join(" ").into()))
+            .args(spec.args)
+            .live()
+            .exec()?;
 
         Ok(())
     }

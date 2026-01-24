@@ -4,18 +4,18 @@ use anyhow::Result;
 use yansi::Paint;
 
 use crate::{
-    app::{MountRole, RunSpec},
+    app::{ContainerRunSpec, MountRole},
     executor::{Executor, Telemetry},
     run, util,
 };
 
 impl Executor {
-    pub(super) fn execute_with_docker(&self, spec: RunSpec) -> Result<()> {
+    pub(super) fn execute_with_docker(&self, spec: ContainerRunSpec) -> Result<()> {
         assert!(matches!(self.engine, run::ContainerEngine::Docker));
 
         util::Command::shell(format!(
             "docker image inspect {0} >/dev/null 2>&1 || docker image pull {0}",
-            spec.container.image.0
+            spec.image.0
         ))
         .live()
         .exec()?;
@@ -33,7 +33,7 @@ impl Executor {
 
         let t = Telemetry::new(&self.working_dir);
 
-        if let Some(scratch) = &spec.container.mounts.get(&MountRole::Scratch) {
+        if let Some(scratch) = &spec.mounts.get(&MountRole::Scratch) {
             let d = t.scratch_dir();
             options.push_str(&format!(
                 " --volume {}:/{scratch}",
@@ -45,8 +45,8 @@ impl Executor {
         let command = util::Command::new("docker")
             .arg("run")
             .args(options.split(' '))
-            .arg(&spec.container.image.0)
-            .args(spec.container.args.clone())
+            .arg(&spec.image.0)
+            .args(spec.args.clone())
             // .message(format!(
             //     "Executing {} with arguments: {:?}",
             //     self.app, spec.args

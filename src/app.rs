@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap, path::PathBuf};
+use std::{borrow::Cow, collections::HashMap, path::Path};
 
 use clap::ValueEnum;
 
@@ -63,10 +63,29 @@ pub enum MountRole {
     Scratch,
 }
 
-pub enum IoSpec {
-    InputDir(PathBuf),
-    InputDirOption(String),
-}
+// enum InputControl {
+//     /// The package expects a file path via a CLI flag (e.g. "--input").
+//     FlagFile { flag: &'static str },
+//     // /// The package expects a directory path via a CLI flag (e.g. "--input-dir").
+//     // FlagDir { flag: &'static str },
+
+//     // /// The package reads inputs from a fixed directory (typically inside the container).
+//     // FixedDir { dir: PathBuf },
+
+//     // /// The package expects a file path via a CLI argument.
+//     // ArgFile { arg: String },
+// }
+// enum OutputControl {
+//     /// Package writes outputs using a prefix provided via CLI flag
+//     /// (e.g. "--out-prefix results/run1")
+//     FlagPrefix { flag: &'static str },
+//     // /// Package writes outputs into a directory provided via CLI flag
+//     // /// (e.g. "--out-dir /results")
+//     // FlagDir { flag: String },
+
+//     // /// Package writes outputs into a fixed directory
+//     // FixedDir { dir: PathBuf },
+// }
 
 pub struct ContainerRunSpec {
     pub image: Image,
@@ -76,14 +95,13 @@ pub struct ContainerRunSpec {
 
 pub struct NativeRunSpec {
     pub pixi: Cow<'static, str>,
-    pub io_spec: IoSpec,
     pub args: Vec<String>,
 }
 
-pub struct RunSpec {
-    pub container: ContainerRunSpec,
-    pub native: Option<NativeRunSpec>,
-}
+// pub struct RunSpec {
+//     pub container: ContainerRunSpec,
+//     pub native: Option<NativeRunSpec>,
+// }
 
 impl ContainerRunSpec {
     pub fn new(image: impl Into<String>, args: Vec<String>) -> Self {
@@ -128,10 +146,9 @@ impl ContainerRunSpec {
 }
 
 impl NativeRunSpec {
-    pub fn new(pixi: impl Into<Cow<'static, str>>, io_spec: IoSpec, args: Vec<String>) -> Self {
+    pub fn new(pixi: impl Into<Cow<'static, str>>, args: Vec<String>) -> Self {
         Self {
             pixi: pixi.into(),
-            io_spec,
             args,
         }
     }
@@ -141,26 +158,64 @@ impl NativeRunSpec {
     // }
 }
 
-impl RunSpec {
-    pub fn new(container: ContainerRunSpec, native: Option<NativeRunSpec>) -> Self {
-        Self { container, native }
-    }
-}
+// impl RunSpec {
+//     pub fn new(container: ContainerRunSpec, native: Option<NativeRunSpec>) -> Self {
+//         Self { container, native }
+//     }
+// }
 
 impl App {
-    pub fn run_spec(self, app_args: Vec<String>) -> RunSpec {
+    pub fn container_spec(self, app_args: Vec<String>) -> ContainerRunSpec {
         match self {
-            App::Score => score::spec(app_args),
-            App::Rosetta => rosetta::spec(app_args),
-            App::PyRosetta => pyrosetta::spec(app_args),
-            App::Rfdiffusion => rfdiffusion::spec(app_args),
-            App::Proteinmpnn => proteinmpnn::spec(app_args),
-            App::ProteinmpnnScript => proteinmpnn_script::spec(app_args),
-            App::Ligandmpnn => ligandmpnn::spec(app_args),
-            App::Picap => picap::spec(app_args),
+            App::Score => score::container_spec(app_args),
+            App::Rosetta => rosetta::container_spec(app_args),
+            App::PyRosetta => pyrosetta::container_spec(app_args),
+            App::Rfdiffusion => rfdiffusion::container_spec(app_args),
+            App::Proteinmpnn => proteinmpnn::container_spec(app_args),
+            App::ProteinmpnnScript => proteinmpnn_script::container_spec(app_args),
+            App::Ligandmpnn => ligandmpnn::container_spec(app_args),
+            App::Picap => picap::container_spec(app_args),
+        }
+    }
+
+    pub fn native_spec(self, app_args: Vec<String>, working_dir: &Path) -> NativeRunSpec {
+        match self {
+            App::Score => todo!("not implemented"), // score::native_spec(app_args),
+            App::Rosetta => todo!("not implemented"), // rosetta::native_spec(app_args),
+            App::PyRosetta => todo!("not implemented"), // pyrosetta::native_spec(app_args),
+            App::Rfdiffusion => rfdiffusion::native_spec(app_args, working_dir),
+            App::Proteinmpnn => todo!("not implemented"), // proteinmpnn::native_spec(app_args),
+            App::ProteinmpnnScript => todo!("not implemented"), // proteinmpnn_script::native_spec(app_args),
+            App::Ligandmpnn => todo!("not implemented"), // ligandmpnn::native_spec(app_args),
+            App::Picap => todo!("not implemented"),      // picap::native_spec(app_args),
         }
     }
 }
+
+// /// Dispatches a method call to the appropriate app module.
+// /// Each App variant calls module::method(args) with the same name.
+// macro_rules! dispatch_spec {
+//     ($method:ident, $self:expr, $args:expr) => {
+//         match $self {
+//             App::Score => score::$method($args),
+//             App::Rosetta => rosetta::$method($args),
+//             App::PyRosetta => pyrosetta::$method($args),
+//             App::Rfdiffusion => rfdiffusion::$method($args),
+//             App::Proteinmpnn => proteinmpnn::$method($args),
+//             App::ProteinmpnnScript => proteinmpnn_script::$method($args),
+//             App::Ligandmpnn => ligandmpnn::$method($args),
+//             App::Picap => picap::$method($args),
+//         }
+//     };
+// }
+// impl App {
+//     pub fn container_spec(self, app_args: Vec<String>) -> ContainerRunSpec {
+//         dispatch_spec!(container_spec, self, app_args)
+//     }
+//     pub fn native_spec(self, app_args: Vec<String>) -> Option<NativeRunSpec> {
+//         dispatch_spec!(native_spec, self, app_args)
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

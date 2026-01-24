@@ -1,6 +1,6 @@
-use crate::app::{ContainerRunSpec, RunSpec};
+use crate::app::ContainerRunSpec;
 
-pub fn spec(mut app_args: Vec<String>) -> RunSpec {
+pub fn container_spec(mut app_args: Vec<String>) -> ContainerRunSpec {
     assert!(
         app_args.is_empty() || app_args[0].starts_with("-"),
         "ProteinmpnnScript arguments must include a script name as first argument"
@@ -18,7 +18,5 @@ pub fn spec(mut app_args: Vec<String>) -> RunSpec {
     app_args.splice(1..1, ["--output_path=/w".into()]);
     app_args[0].insert_str(0, "/app/proteinmpnn/helper_scripts/");
 
-    let container = ContainerRunSpec::new("rosettacommons/proteinmpnn", app_args).working_dir("/w");
-
-    RunSpec::new(container, None)
+    ContainerRunSpec::new("rosettacommons/proteinmpnn", app_args).working_dir("/w")
 }

@@ -1,7 +1,7 @@
-use crate::app::{ContainerRunSpec, RunSpec};
+use crate::app::ContainerRunSpec;
 
-pub fn spec(app_args: Vec<String>) -> RunSpec {
-    let container = ContainerRunSpec::with_prefixed_args(
+pub fn container_spec(app_args: Vec<String>) -> ContainerRunSpec {
+    ContainerRunSpec::with_prefixed_args(
         "rosettacommons/ligandmpnn",
         [
             "--out_folder=/w",
@@ -10,9 +10,7 @@ pub fn spec(app_args: Vec<String>) -> RunSpec {
         ],
         app_args,
     )
-    .working_dir("/w");
-
-    RunSpec::new(container, None)
+    .working_dir("/w")
 
     // app_args.splice(
     //     0..0,

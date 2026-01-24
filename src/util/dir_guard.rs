@@ -4,6 +4,9 @@ use std::ops::ShlAssign;
 use std::path::Path;
 
 use anyhow::Result;
+use yansi::Paint;
+
+use crate::util::PaintExt;
 
 const DIR_SIGNATURE_FILE: &str = ".signature.rc";
 
@@ -26,11 +29,16 @@ where
         if signature_matches(&signature_path, &signature)? {
             return Ok(DirState::UpToDate);
         }
+        println!(
+            "Directory {:?} is outdated, removing old content...",
+            dir.orange()
+        );
         std::fs::remove_dir_all(dir)?;
         DirState::Rebuilt
     } else {
         DirState::Built
     };
+    println!("Building directory {:?}...", dir.to_string_lossy().green());
 
     std::fs::create_dir_all(dir)?;
     builder(dir)?;

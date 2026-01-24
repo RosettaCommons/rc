@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 
 use crate::{
-    app::{App, Image, RunSpec},
+    app::{App, Image},
     run::ContainerEngine,
 };
 
@@ -26,15 +26,17 @@ impl Executor {
         }
     }
 
-    pub fn execute(&self, spec: RunSpec) -> Result<()> {
+    pub fn execute(&self, app_args: Vec<String>) -> Result<()> {
         match self.engine {
-            ContainerEngine::Docker => self.execute_with_docker(spec),
+            ContainerEngine::Docker => self.execute_with_docker(self.app.container_spec(app_args)),
 
             ContainerEngine::Singularity | ContainerEngine::Apptainer => {
-                self.execute_with_hpc_container_engine(spec)
+                self.execute_with_hpc_container_engine(self.app.container_spec(app_args))
             }
 
-            ContainerEngine::None => self.execute_native(spec),
+            ContainerEngine::None => {
+                self.execute_native(self.app.native_spec(app_args, &self.working_dir))
+            }
         }
     }
 

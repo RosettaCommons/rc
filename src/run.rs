@@ -35,6 +35,5 @@ pub fn run(
         }
     );
 
-    executor::Executor::new(app.to_owned(), *container_engine, working_dir)
-        .execute(app.run_spec(app_args))
+    executor::Executor::new(app.to_owned(), *container_engine, working_dir).execute(app_args)
 }
