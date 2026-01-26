@@ -37,16 +37,21 @@ impl Executor {
                 Ok(())
             },
         )?;
+        let new_args = spec
+            .args
+            .into_iter()
+            .map(|arg| shell_escape::escape(arg.into()).to_string())
+            .collect::<Vec<_>>()
+            .join(" ");
 
         Command::new("pixi")
             .cd(&pixi_evn_root)
             .arg("run")
             .arg("execute")
-            // .arg(shell_escape::escape(spec.args.join(" ").into()))
-            .args(spec.args)
+            .arg(new_args)
             .live()
             .exec()?;
-
+        
         Ok(())
     }
 
