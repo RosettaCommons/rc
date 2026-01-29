@@ -1,8 +1,11 @@
+use std::fs;
+
 use anyhow::Result;
 use anyhow::anyhow;
 use home::home_dir;
 use yansi::Paint;
 
+use crate::executor::Telemetry;
 use crate::run;
 use crate::util::Command;
 use crate::util::ensure_dir_signature;
@@ -44,14 +47,46 @@ impl Executor {
             .collect::<Vec<_>>()
             .join(" ");
 
-        Command::new("pixi")
+        let command = Command::new("pixi")
             .cd(&pixi_evn_root)
             .arg("run")
             .arg("execute")
             .arg(new_args)
-            .live()
-            .exec()?;
-        
+            .live();
+
+        let result = command.call();
+
+        let t = Telemetry::new(&self.working_dir);
+
+        let logs = format!(
+            "{command}\nprocess success: {}\n{}\n{}\n{}\n",
+            result.success, result.stdout, result.stderr, result.stderr
+        );
+
+        fs::write(t.log_file_name(), logs)?;
+
+        if !result.success {
+            eprintln!(
+                "{}",
+                "Container {engine} exited with non-zero status"
+                    .bright_red()
+                    .bold()
+            );
+            return Err(anyhow::anyhow!(
+                "Docker container exited with non-zero status"
+            ));
+        }
+
+        println!(
+            "{}",
+            format!(
+                "The exact command line used and full log saved into {:?}\nScratch dir for this run is: {:?}\n",
+                t.log_file_name(), t.scratch_dir()
+            )
+            .blue()
+            .dim()
+        );
+
         Ok(())
     }
 

@@ -8,8 +8,9 @@ description = "Command line tool to run various biomolecular structural predicti
 [features]
 docker-tests = []
 hpc-tests = []
+native-tests = []
 high-memory-tests = []
-all = ["docker-tests", "hpc-tests", "high-memory-tests"]
+all = ["docker-tests", "hpc-tests", "native-tests", "high-memory-tests"]
 
 [dependencies]
 anyhow = "1.0.100"
