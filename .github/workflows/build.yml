@@ -48,4 +48,4 @@ jobs:
 
       - name: Run Native tests
         run: |
-          cargo test --verbose -F native-tests
+          cargo test --verbose -F native-tests,high-memory-tests
