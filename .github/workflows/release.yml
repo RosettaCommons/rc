@@ -157,10 +157,9 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           export PATH="$HOME/.cargo/bin:$PATH"
           rustup default stable
-          rustup target add aarch64-unknown-linux-musl
 
       - name: Build Rust Code
-        run: cargo build --release --target aarch64-unknown-linux-musl
+        run: cargo build --release
 
       - name: Get Release Version
         id: get_release_version
@@ -170,7 +169,7 @@ jobs:
       - name: Create Zip Archive
         run: |
           version=$(echo ${{ steps.get_release_version.outputs.version }})
-          zip -j "$version-linux-arm64.zip" target/aarch64-unknown-linux-musl/release/$PROJECT_NAME
+          zip -j "$version-linux-arm64.zip" target/release/$PROJECT_NAME
 
       - name: Upload Release Artifact with gh
         env:
