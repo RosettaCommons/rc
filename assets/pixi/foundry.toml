@@ -1,0 +1,57 @@
+[workspace]
+name = "foundry"
+version = "0.0.1"
+description = "Pixi environment for https://github.com/RosettaCommons/foundry app"
+platforms = ["linux-64", "osx-64", "osx-arm64"]
+# channels = ["conda-forge"]
+
+[dependencies]
+python = "3.12.*"
+pip = "*"
+git = "*"
+uv = "*"
+
+[activation.env]
+FOUNDRY_VERSION = "v0.1.9""
+FOUNDRY_DIR = "$PIXI_PROJECT_ROOT/foundry"
+FOUNDRY_CHECKPOINTS = "$PIXI_PROJECT_ROOT/foundry/checkpoints"
+
+[tasks]
+setup = { depends-on = ["clone", "install", "download-models"] }
+
+[tasks.clone]
+cmd = """
+if [ ! -d "$FOUNDRY_DIR" ]; then
+  git clone https://github.com/RosettaCommons/foundry "$FOUNDRY_DIR"
+fi
+cd "$FOUNDRY_DIR" && git checkout $FOUNDRY_VERSION
+"""
+
+[tasks.install]
+depends-on = ["clone"]
+cmd = """
+cd "$FOUNDRY_DIR" && \
+uv venv --python 3.12 && \
+uv pip install ".[all]" && \
+.venv/bin/foundry --help
+"""
+
+[tasks.download-models]
+depends-on = ["install"]
+cmd = """
+cd "$FOUNDRY_DIR" && \
+.venv/bin/foundry install base-models --checkpoint-dir "$FOUNDRY_CHECKPOINTS"
+"""
+
+[tasks.foundry]
+depends-on = ["install"]
+args = ["args"]
+cmd = """
+cd "$FOUNDRY_DIR" && \
+.venv/bin/foundry {{args}}
+"""
+
+[tasks.clean]
+cmd = """
+rm -rf "$FOUNDRY_DIR"
+"""
