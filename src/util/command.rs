@@ -62,6 +62,11 @@ impl Command {
         self
     }
 
+    pub fn add_arg(&mut self, arg: impl Into<String>) -> &mut Self {
+        self.args.push(arg.into());
+        self
+    }
+
     pub fn arg(mut self, arg: impl Into<String>) -> Self {
         self.args.push(arg.into());
         self
@@ -360,5 +365,17 @@ mod tests {
             result.unwrap_err().to_string(),
             "command failed with non-zero exit code"
         );
+    }
+
+    #[test]
+    fn test_add_arg_basic() {
+        let mut cmd = Command::new("echo");
+
+        // Test that add_arg allows non-consuming mutations with chaining
+        cmd.add_arg("hello").add_arg("world");
+
+        let result = cmd.try_call();
+        assert!(result.success);
+        assert_eq!(result.stdout.trim(), "hello world");
     }
 }

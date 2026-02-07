@@ -1,7 +1,3 @@
-use std::{borrow::Cow, collections::HashMap, path::Path};
-
-use clap::ValueEnum;
-
 mod ligandmpnn;
 mod picap;
 mod proteinmpnn;
@@ -10,6 +6,10 @@ mod pyrosetta;
 mod rfdiffusion;
 mod rosetta;
 mod score;
+
+use std::{borrow::Cow, collections::HashMap, path::Path};
+
+use clap::ValueEnum;
 
 #[derive(ValueEnum, Clone, Copy, Debug, strum::Display)]
 #[clap(rename_all = "lowercase")]
