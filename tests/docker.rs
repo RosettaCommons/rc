@@ -40,8 +40,8 @@ fn mock_docker_rosetta_score() {
     #[cfg(unix)]
     command_line_parts.push(format!(
         "--user {}:{}",
-        users::get_current_uid(),
-        users::get_current_gid()
+        nix::unistd::getuid().as_raw(),
+        nix::unistd::getgid().as_raw()
     ));
 
     command_line_parts.push("--workdir /w".into());

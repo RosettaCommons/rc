@@ -26,8 +26,8 @@ impl Executor {
 
         #[cfg(unix)]
         {
-            let uid = users::get_current_uid();
-            let gid = users::get_current_gid();
+            let uid = nix::unistd::getuid().as_raw();
+            let gid = nix::unistd::getgid().as_raw();
             options.push_str(&format!(" --user {uid}:{gid}"));
         }
 
