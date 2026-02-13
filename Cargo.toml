@@ -2,7 +2,7 @@
 name = "rc"
 version = "0.1.0"
 edition = "2024"
-authors = ["Sergey Lyskov"]
+authors = ["Sergey Lyskov", "Hope Woods", "Rachel Clune"]
 description = "Command line tool to run various biomolecular structural prediction, analysis and design applications"
 
 [features]
