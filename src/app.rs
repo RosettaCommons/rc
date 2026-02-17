@@ -1,3 +1,4 @@
+mod foundry;
 mod ligandmpnn;
 mod picap;
 mod proteinmpnn;
@@ -40,6 +41,10 @@ pub enum App {
     /// Run the LigandMPNN command https://github.com/dauparas/LigandMPNN
     #[value(aliases = ["LigandMPNN"])]
     Ligandmpnn,
+
+    /// Run the Foundry command https://github.com/RosettaCommons/foundry
+    #[value(aliases = ["Foundry"])]
+    Foundry,
 
     /// Run the PiCAP/CAPSIF2 command https://github.com/Graylab/picap
     #[value(aliases = ["PiCAP", "CAPSIF2"])]
@@ -174,6 +179,7 @@ impl App {
             App::Proteinmpnn => proteinmpnn::container_spec(app_args),
             App::ProteinmpnnScript => proteinmpnn_script::container_spec(app_args),
             App::Ligandmpnn => ligandmpnn::container_spec(app_args),
+            App::Foundry => foundry::container_spec(app_args),
             App::Picap => picap::container_spec(app_args),
         }
     }
@@ -187,7 +193,8 @@ impl App {
             App::Proteinmpnn => todo!("not implemented"), // proteinmpnn::native_spec(app_args),
             App::ProteinmpnnScript => todo!("not implemented"), // proteinmpnn_script::native_spec(app_args),
             App::Ligandmpnn => todo!("not implemented"), // ligandmpnn::native_spec(app_args),
-            App::Picap => todo!("not implemented"),      // picap::native_spec(app_args),
+            App::Foundry => foundry::native_spec(app_args, working_dir),
+            App::Picap => todo!("not implemented"), // picap::native_spec(app_args),
         }
     }
 }

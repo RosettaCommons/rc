@@ -2,7 +2,7 @@ use crate::app::ContainerRunSpec;
 
 pub fn container_spec(mut app_args: Vec<String>) -> ContainerRunSpec {
     assert!(
-        app_args.is_empty() || app_args[0].starts_with("-"),
+        !(app_args.is_empty() || app_args[0].starts_with("-")),
         "ProteinmpnnScript arguments must include a script name as first argument"
     );
 
