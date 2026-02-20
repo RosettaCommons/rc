@@ -37,3 +37,16 @@ serial_test = "3.2.0"
 # name = "docker-tests"
 # path = "tests/docker.rs"
 # required-features = ["docker-tests"]
+
+[lints.rust]
+rust-2024-compatibility = "warn"
+# optionally, make them hard errors in CI:
+# rust-2024-compatibility = "deny"
+
+#![warn(rust_2018_idioms)]
+rust-2018-idioms = "deny"
+
+# missing-debug-implementations = "warn"
+
+# [lints.clippy]
+# all = "deny"

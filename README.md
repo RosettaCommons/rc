@@ -91,6 +91,7 @@ rc run [OPTIONS] <APP> [ARGS]...
 - `proteinmpnn` - Run ProteinMPNN for protein sequence design
 - `proteinmpnn-script` - Run ProteinMPNN helper scripts for preprocessing and analysis
 - `ligandmpnn` - Run LigandMPNN for protein-ligand interface design
+- `foundry` - Run Foundry toolkit (RFDiffusion3, LigandMPNN, RoseTTAFold3) for integrated protein design workflows
 
 ### `install`
 
@@ -189,6 +190,92 @@ rc run proteinmpnn \
     --pdb_path_chains "A" \
     --num_seq_per_target 10 \
     --sampling_temp 0.1
+```
+
+### Foundry
+
+**Note:** Foundry currently supports Docker/HPC container environments only (native run not yet implemented).
+
+Foundry provides an integrated toolkit combining RFDiffusion3 (rfd3), LigandMPNN (mpnn), and RoseTTAFold3 (rf3) for comprehensive protein design workflows.
+
+#### Complete workflow example
+
+First, create an input JSON file (e.g., `input.json`):
+
+```bash
+echo '{ "foundry": { "length": "10" } }' > input.json
+```
+
+Then run the three-step workflow:
+
+**Step 1: Run RFDiffusion3 for structure generation**
+
+```bash
+rc run foundry rfd3 \
+    out_dir=rfd3_out/ \
+    inputs=input.json \
+    skip_existing=False \
+    prevalidate_inputs=True \
+    n_batches=1 \
+    diffusion_batch_size=1 \
+    inference_sampler.num_timesteps=10 \
+    low_memory_mode=True \
+    global_prefix=design_
+```
+
+**Step 2: Run LigandMPNN for sequence design**
+
+```bash
+rc run foundry mpnn \
+    --structure_path rfd3_out/design_foundry_0_model_0.cif.gz \
+    --is_legacy_weights True \
+    --model_type ligand_mpnn \
+    --out_directory mpnn_out
+```
+
+**Step 3: Run RoseTTAFold3 for structure prediction**
+
+```bash
+rc run foundry rf3 fold \
+    inputs=mpnn_out/design_foundry_0_model_0.cif_b0_d0.cif \
+    diffusion_batch_size=1 \
+    num_steps=10 \
+    out_dir=rf3_out
+```
+
+#### Using explicit weights specification
+
+You can specify custom checkpoint paths for the models:
+
+```bash
+# RFDiffusion3 with custom checkpoint
+rc run foundry rfd3 \
+    out_dir=rfd3_out/ \
+    inputs=input.json \
+    ckpt_path=/weights/rfd3_latest.ckpt \
+    skip_existing=False \
+    prevalidate_inputs=True \
+    n_batches=1 \
+    diffusion_batch_size=1 \
+    inference_sampler.num_timesteps=10 \
+    low_memory_mode=True \
+    global_prefix=design_
+
+# LigandMPNN with custom checkpoint
+rc run foundry mpnn \
+    --structure_path rfd3_out/design_foundry_0_model_0.cif.gz \
+    --checkpoint_path /weights/ligandmpnn_v_32_010_25.pt \
+    --is_legacy_weights True \
+    --model_type ligand_mpnn \
+    --out_directory mpnn_out
+
+# RoseTTAFold3 with custom checkpoint
+rc run foundry rf3 fold \
+    inputs=mpnn_out/design_foundry_0_model_0.cif_b0_d0.cif \
+    ckpt_path=/weights/rf3_foundry_01_24_latest_remapped.ckpt \
+    diffusion_batch_size=1 \
+    num_steps=10 \
+    out_dir=rf3_out
 ```
 
 ### General Options
