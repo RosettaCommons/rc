@@ -2,6 +2,7 @@ use std::fs;
 
 use anyhow::Result;
 use anyhow::anyhow;
+use camino::Utf8PathBuf;
 use home::home_dir;
 use yansi::Paint;
 
@@ -22,9 +23,12 @@ impl Executor {
         Self::check_if_pixi_is_installed()?;
 
         //let pixi_evn_root = self.working_dir.join(format!("{}.pixi", self.app));
-        let pixi_evn_root = home_dir()
-            .unwrap()
-            .join(format!(".cache/rosettacommons/rc/native/{}", self.app));
+        let pixi_evn_root = Utf8PathBuf::from_path_buf(
+            home_dir()
+                .unwrap()
+                .join(format!(".cache/rosettacommons/rc/native/{}", self.app)),
+        )
+        .expect("path is not valid UTF-8");
 
         ensure_dir_signature(
             &pixi_evn_root,
@@ -40,16 +44,18 @@ impl Executor {
                 Ok(())
             },
         )?;
+
         let new_args = spec
             .args
-            .into_iter()
-            .map(|arg| shell_escape::escape(arg.into()).to_string())
-            .collect::<Vec<_>>()
+            // .into_iter()
+            // .map(|arg| shell_escape::escape(arg.into()).to_string())
+            // .collect::<Vec<_>>()
             .join(" ");
 
         let command = Command::new("pixi")
-            .cd(&pixi_evn_root)
+            // .cd(&pixi_evn_root)
             .arg("run")
+            .args(["--manifest-path", pixi_evn_root.join("pixi.toml").as_str()])
             .arg("execute")
             .arg(new_args)
             .live();

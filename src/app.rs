@@ -8,8 +8,9 @@ mod rfdiffusion;
 mod rosetta;
 mod score;
 
-use std::{borrow::Cow, collections::HashMap, path::Path};
+use std::{borrow::Cow, collections::HashMap};
 
+use camino::Utf8Path;
 use clap::ValueEnum;
 
 #[derive(ValueEnum, Clone, Copy, Debug, strum::Display)]
@@ -184,7 +185,7 @@ impl App {
         }
     }
 
-    pub fn native_spec(self, app_args: Vec<String>, working_dir: &Path) -> NativeRunSpec {
+    pub fn native_spec(self, app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
         match self {
             App::Score => todo!("not implemented"), // score::native_spec(app_args),
             App::Rosetta => todo!("not implemented"), // rosetta::native_spec(app_args),

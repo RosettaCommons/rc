@@ -1,6 +1,5 @@
-use std::path::PathBuf;
-
 use anyhow::Result;
+use camino::Utf8PathBuf;
 use clap::ValueEnum;
 use yansi::Paint;
 
@@ -19,12 +18,12 @@ pub fn run(
     app: &app::App,
     app_args: Vec<String>,
     container_engine: &ContainerEngine,
-    working_dir: PathBuf,
+    working_dir: Utf8PathBuf,
 ) -> Result<()> {
     println!(
         "Running app: {} in directory: {}{}",
         app.green(),
-        working_dir.display(),
+        working_dir,
         if app_args.is_empty() {
             "".into()
         } else {

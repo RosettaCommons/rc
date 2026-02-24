@@ -15,6 +15,7 @@ all = ["docker-tests", "hpc-tests", "native-tests", "high-memory-tests"]
 [dependencies]
 anyhow = "1.0.100"
 blake3 = "1.8.2"
+camino = "1.2.2"
 clap = { version = "4.5.51", features = ["derive"] }
 home = "0.5.12"
 paste = "1.0.15"

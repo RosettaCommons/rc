@@ -3,10 +3,10 @@ mod executor;
 mod run;
 mod util;
 
-use std::path::PathBuf;
 use std::process;
 
 use anyhow::Result;
+use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use yansi::Paint;
 
@@ -57,7 +57,7 @@ enum Commands {
 
         /// Input directory path
         #[arg(short, long)]
-        working_dir: Option<PathBuf>,
+        working_dir: Option<Utf8PathBuf>,
 
         #[arg(short = 'e', long, default_value = "docker")]
         container_engine: run::ContainerEngine,
@@ -146,9 +146,10 @@ fn main() -> Result<()> {
         }) => {
             let working_dir = working_dir
                 .clone()
-                .unwrap_or_else(|| PathBuf::from("."))
+                .unwrap_or_else(|| Utf8PathBuf::from("."))
                 .canonicalize()
                 .unwrap();
+            let working_dir = Utf8PathBuf::try_from(working_dir).unwrap();
 
             run::run(app, app_args.clone(), container_engine, working_dir)
         }

@@ -1,9 +1,9 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::ops::ShlAssign;
-use std::path::Path;
 
 use anyhow::Result;
+use camino::Utf8Path;
 use yansi::Paint;
 
 use crate::util::PaintExt;
@@ -17,10 +17,14 @@ pub enum DirState {
     Rebuilt,
 }
 
-pub fn ensure_dir_signature<F, S>(dir: &Path, signature_parts: &[S], builder: F) -> Result<DirState>
+pub fn ensure_dir_signature<F, S>(
+    dir: &Utf8Path,
+    signature_parts: &[S],
+    builder: F,
+) -> Result<DirState>
 where
     S: AsRef<[u8]>,
-    F: FnOnce(&Path) -> Result<()>,
+    F: FnOnce(&Utf8Path) -> Result<()>,
 {
     let signature = hash_slices(signature_parts);
     let signature_path = dir.join(DIR_SIGNATURE_FILE);
@@ -38,7 +42,7 @@ where
     } else {
         DirState::Built
     };
-    println!("Building directory {:?}...", dir.to_string_lossy().green());
+    println!("Building directory {:?}...", dir.green());
 
     std::fs::create_dir_all(dir)?;
     builder(dir)?;
@@ -56,7 +60,7 @@ fn hash_slices<S: AsRef<[u8]>>(data: &[S]) -> String {
     hasher.finalize().to_string()
 }
 
-fn signature_matches(signature_path: &Path, signature: &str) -> Result<bool> {
+fn signature_matches(signature_path: &Utf8Path, signature: &str) -> Result<bool> {
     if !signature_path.exists() {
         return Ok(false);
     }
@@ -64,7 +68,7 @@ fn signature_matches(signature_path: &Path, signature: &str) -> Result<bool> {
     Ok(content == signature)
 }
 
-fn write_signature(signature_path: &Path, signature: &str) -> Result<()> {
+fn write_signature(signature_path: &Utf8Path, signature: &str) -> Result<()> {
     std::fs::write(signature_path, signature)?;
     Ok(())
 }
@@ -73,12 +77,17 @@ fn write_signature(signature_path: &Path, signature: &str) -> Result<()> {
 mod tests {
     use super::*;
     use assert_fs::TempDir;
+    use camino::Utf8PathBuf;
     use std::fs;
     use std::io::Sink;
-    use std::path::PathBuf;
 
     fn setup_test_dir() -> TempDir {
         TempDir::new().unwrap()
+    }
+
+    fn to_utf8_path(temp: &TempDir, sub: &str) -> Utf8PathBuf {
+        let path = temp.path().join(sub);
+        Utf8PathBuf::from_path_buf(path).expect("path is not valid UTF-8")
     }
 
     #[test]
@@ -128,7 +137,7 @@ mod tests {
     #[test]
     fn test_signature_matches_nonexistent_file() {
         let temp = setup_test_dir();
-        let sig_path = temp.path().join("nonexistent.sig");
+        let sig_path = to_utf8_path(&temp, "nonexistent.sig");
 
         let result = signature_matches(&sig_path, "any_signature").unwrap();
         assert!(!result);
@@ -137,7 +146,7 @@ mod tests {
     #[test]
     fn test_signature_matches_correct_signature() {
         let temp = setup_test_dir();
-        let sig_path = temp.path().join("test.sig");
+        let sig_path = to_utf8_path(&temp, "test.sig");
         let signature = "test_signature_12345";
 
         fs::write(&sig_path, signature).unwrap();
@@ -149,7 +158,7 @@ mod tests {
     #[test]
     fn test_signature_matches_detects_signature_mismatch() {
         let temp = setup_test_dir();
-        let sig_path = temp.path().join("test.sig");
+        let sig_path = to_utf8_path(&temp, "test.sig");
 
         fs::write(&sig_path, "old_signature").unwrap();
 
@@ -160,7 +169,7 @@ mod tests {
     #[test]
     fn test_write_signature() {
         let temp = setup_test_dir();
-        let sig_path = temp.path().join("test.sig");
+        let sig_path = to_utf8_path(&temp, "test.sig");
         let signature = "test_signature";
 
         write_signature(&sig_path, signature).unwrap();
@@ -172,7 +181,7 @@ mod tests {
     #[test]
     fn test_ensure_dir_signature_builds_new_dir() {
         let temp = setup_test_dir();
-        let target = temp.path().join("new_dir");
+        let target = to_utf8_path(&temp, "new_dir");
         let mut builder_called = false;
 
         let result = ensure_dir_signature(&target, &["signature", "data"], |path| {
@@ -192,7 +201,7 @@ mod tests {
     #[test]
     fn test_ensure_dir_signature_up_to_date() {
         let temp = setup_test_dir();
-        let target = temp.path().join("existing_dir");
+        let target = to_utf8_path(&temp, "existing_dir");
 
         let signature = ["signature", "data"];
 
@@ -221,7 +230,7 @@ mod tests {
     #[test]
     fn test_ensure_dir_signature_rebuilds_on_signature_change() {
         let temp = setup_test_dir();
-        let target = temp.path().join("rebuild_dir");
+        let target = to_utf8_path(&temp, "rebuild_dir");
 
         // Create initial structure with nested directories
         ensure_dir_signature(&target, &["old", "signature"], |path| {
@@ -261,7 +270,7 @@ mod tests {
     #[test]
     fn test_ensure_dir_signature_builder_error_propagates() {
         let temp = setup_test_dir();
-        let target = temp.path().join("error_dir");
+        let target = to_utf8_path(&temp, "error_dir");
 
         let result = ensure_dir_signature(&target, &["sig"], |_path| {
             anyhow::bail!("Builder failed intentionally")
@@ -279,7 +288,7 @@ mod tests {
     #[test]
     fn test_ensure_dir_signature_handles_bytes() {
         let temp = setup_test_dir();
-        let target = temp.path().join("bytes_dir");
+        let target = to_utf8_path(&temp, "bytes_dir");
 
         let byte_data: Vec<Vec<u8>> = vec![vec![0, 1, 2, 3], vec![255, 254, 253]];
 

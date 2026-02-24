@@ -2,9 +2,8 @@ mod docker;
 mod hpc_container;
 mod native;
 
-use std::path::{Path, PathBuf};
-
 use anyhow::Result;
+use camino::{Utf8Path, Utf8PathBuf};
 
 use crate::{
     app::{App, Image},
@@ -13,12 +12,12 @@ use crate::{
 
 pub struct Executor {
     app: App,
-    working_dir: PathBuf,
+    working_dir: Utf8PathBuf,
     engine: ContainerEngine,
 }
 
 impl Executor {
-    pub fn new(app: App, engine: ContainerEngine, working_dir: PathBuf) -> Self {
+    pub fn new(app: App, engine: ContainerEngine, working_dir: Utf8PathBuf) -> Self {
         Executor {
             app,
             working_dir,
@@ -52,12 +51,12 @@ impl Executor {
 }
 
 struct Telemetry {
-    working_dir: PathBuf,
+    working_dir: Utf8PathBuf,
     prefix: String,
 }
 
 impl Telemetry {
-    fn new(working_dir: &Path) -> Self {
+    fn new(working_dir: &Utf8Path) -> Self {
         let mut i: u32 = 0;
         loop {
             let prefix = format!(".{i:04}.rc");
@@ -76,11 +75,11 @@ impl Telemetry {
         }
     }
 
-    pub fn log_file_name(&self) -> PathBuf {
+    pub fn log_file_name(&self) -> Utf8PathBuf {
         self.working_dir.join(format!("{}.log", self.prefix))
     }
 
-    pub fn scratch_dir(&self) -> PathBuf {
+    pub fn scratch_dir(&self) -> Utf8PathBuf {
         self.working_dir.join(format!("rc.scratch/{}", self.prefix))
     }
 }

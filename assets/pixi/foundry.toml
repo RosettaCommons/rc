@@ -15,7 +15,7 @@ uv = "*"
 [activation.env]
 FOUNDRY_VERSION = "v0.1.9"
 FOUNDRY_DIR = "$PIXI_PROJECT_ROOT/foundry"
-FOUNDRY_CHECKPOINTS = "$FOUNDRY_DIR/weights"
+FOUNDRY_CHECKPOINTS = "$PIXI_PROJECT_ROOT/weights"
 
 [tasks]
 setup = { depends-on = ["clone", "install", "download-models"] }
@@ -31,9 +31,10 @@ cd "$FOUNDRY_DIR" && git checkout $FOUNDRY_VERSION
 [tasks.install]
 depends-on = ["clone"]
 cmd = ["bash", "-lc", """
-cd "$FOUNDRY_DIR" && \
-pip install ".[all]" && \
-foundry --help
+cd "$FOUNDRY_DIR" \
+&& pip install ".[all]" \
+&& touch $PIXI_PROJECT_ROOT/.project-root \
+&& foundry --help
 """]
 
 [tasks.download-models]
@@ -53,11 +54,13 @@ foundry {{args}}
 
 [tasks.execute]
 # depends-on = ["install"]
-args = ["cmd"]
+args = ["args"]
+#cwd = "$FOUNDRY_DIR"
+# cd "$FOUNDRY_DIR" && {{args}}
 cmd = ["bash", "-lc", """
-{{cmd}}
+{{args}}
 """]
-# cd "$FOUNDRY_DIR"
+
 
 [tasks.clean]
 cmd = ["bash", "-lc", """

@@ -22,7 +22,7 @@ impl Executor {
 
         //self.log_execute_info(&spec);
 
-        let mut options = format!("--volume {}:/w --workdir /w", self.working_dir.display());
+        let mut options = format!("--volume {}:/w --workdir /w", self.working_dir);
 
         #[cfg(unix)]
         {
@@ -35,10 +35,7 @@ impl Executor {
 
         if let Some(scratch) = &spec.mounts.get(&MountRole::Scratch) {
             let d = t.scratch_dir();
-            options.push_str(&format!(
-                " --volume {}:/{scratch}",
-                d.to_str().expect("path is not valid UTF-8")
-            ));
+            options.push_str(&format!(" --volume {d}:/{scratch}"));
             fs::create_dir_all(&d)?;
         }
 
