@@ -15,7 +15,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build
         run: |
-          cargo install cargo-nextest --locked
           cargo build --verbose
 
   tests:
@@ -26,6 +25,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run tests
         run: |
+          cargo install cargo-nextest --locked
           cargo nextest --verbose
 
   cargo-audit:
@@ -50,6 +50,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Docker tests
         run: |
+          cargo install cargo-nextest --locked
           cargo nextest --verbose -F docker-tests
 
   native-tests:
@@ -66,4 +67,5 @@ jobs:
 
       - name: Run Native tests
         run: |
+          cargo install cargo-nextest --locked
           cargo nextest --verbose -F native-tests,high-memory-tests
