@@ -26,7 +26,7 @@ jobs:
       - name: Run tests
         run: |
           cargo install cargo-nextest --locked
-          cargo nextest --verbose
+          cargo nextest run
 
   cargo-audit:
     runs-on: ubuntu-latest
@@ -51,7 +51,7 @@ jobs:
       - name: Run Docker tests
         run: |
           cargo install cargo-nextest --locked
-          cargo nextest --verbose -F docker-tests
+          cargo nextest run -F docker-tests
 
   native-tests:
     runs-on: ubuntu-latest
@@ -68,4 +68,4 @@ jobs:
       - name: Run Native tests
         run: |
           cargo install cargo-nextest --locked
-          cargo nextest --verbose -F native-tests,high-memory-tests
+          cargo nextest run -F native-tests,high-memory-tests
