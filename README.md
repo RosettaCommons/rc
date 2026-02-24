@@ -43,7 +43,7 @@ Supported container engines:
 - `docker` (default)
 - `singularity`
 - `apptainer`
-- `none` (run natively without containers)
+- `none` (run natively without containers - supported by RFDiffusion and Foundry)
 
 ### Working Directory
 
@@ -92,6 +92,19 @@ rc run [OPTIONS] <APP> [ARGS]...
 - `proteinmpnn-script` - Run ProteinMPNN helper scripts for preprocessing and analysis
 - `ligandmpnn` - Run LigandMPNN for protein-ligand interface design
 - `foundry` - Run Foundry toolkit (RFDiffusion3, LigandMPNN, RoseTTAFold3) for integrated protein design workflows
+
+**Container Engine Support:**
+
+| App | Docker | HPC Containers (Singularity/Apptainer) | Native |
+|-----|--------|----------------------------------------|--------|
+| `rosetta` | ✓ | ✓ |  |
+| `score` | ✓ | ✓ |  |
+| `pyrosetta` | ✓ | ✓ |  |
+| `rfdiffusion` | ✓ | ✓ | ✓ |
+| `proteinmpnn` | ✓ | ✓ |  |
+| `proteinmpnn-script` | ✓ | ✓ |  |
+| `ligandmpnn` | ✓ | ✓ | |
+| `foundry` | ✓ | ✓ | ✓ |
 
 ### `install`
 
@@ -153,6 +166,8 @@ rc run pyrosetta design_script.py
 
 ### RFdiffusion
 
+RFdiffusion supports native runs without containers ((uses `-e none`).
+
 #### Generate a protein backbone
 
 ```bash
@@ -194,9 +209,7 @@ rc run proteinmpnn \
 
 ### Foundry
 
-**Note:** Foundry currently supports Docker/HPC container environments only (native run not yet implemented).
-
-Foundry provides an integrated toolkit combining RFDiffusion3 (rfd3), LigandMPNN (mpnn), and RoseTTAFold3 (rf3) for comprehensive protein design workflows.
+Foundry provides an integrated toolkit combining RFDiffusion3 (rfd3), LigandMPNN (mpnn), and RoseTTAFold3 (rf3) for comprehensive protein design workflows. It supports native runs without containers (uses `-e none`).
 
 #### Complete workflow example
 
