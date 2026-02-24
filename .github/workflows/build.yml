@@ -33,7 +33,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install cargo-audit
-        run: cargo install cargo-audit
+        run: |
+          cargo install cargo-audit
+          cargo install cargo-nextest --locked
 
       - name: Run cargo audit
         run: cargo audit
@@ -61,4 +63,4 @@ jobs:
 
       - name: Run Native tests
         run: |
-          cargo test --verbose -F native-tests,high-memory-tests
+          cargo nextest --verbose -F native-tests,high-memory-tests
