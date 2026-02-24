@@ -6,6 +6,29 @@ A command line tool to run various biomolecular structural prediction, analysis 
 
 `rc` provides a unified interface for running Rosetta and other biomolecular modeling applications through container engines like Docker, Singularity, or Apptainer.
 
+**Available Apps:**
+- `rosetta` - Run Rosetta protocols and applications
+- `score` - Run Rosetta score command (shorthand for common scoring tasks)
+- `pyrosetta` - Execute PyRosetta Python scripts with PyRosetta environment
+- `rfdiffusion` - Run RFdiffusion for protein structure generation
+- `proteinmpnn` - Run ProteinMPNN for protein sequence design
+- `proteinmpnn-script` - Run ProteinMPNN helper scripts for preprocessing and analysis
+- `ligandmpnn` - Run LigandMPNN for protein-ligand interface design
+- `foundry` - Run Foundry toolkit (RFDiffusion3, LigandMPNN, RoseTTAFold3) for integrated protein design workflows
+
+**Container Engine Support:**
+
+| App | Docker | HPC Containers (Singularity/Apptainer) | Native |
+|-----|--------|----------------------------------------|--------|
+| `rosetta` | ✓ | ✓ |  |
+| `score` | ✓ | ✓ |  |
+| `pyrosetta` | ✓ | ✓ |  |
+| `rfdiffusion` | ✓ | ✓ | ✓ |
+| `proteinmpnn` | ✓ | ✓ |  |
+| `proteinmpnn-script` | ✓ | ✓ |  |
+| `ligandmpnn` | ✓ | ✓ | |
+| `foundry` | ✓ | ✓ | ✓ |
+
 ## Installation
 
 ```bash
@@ -82,29 +105,6 @@ rc run [OPTIONS] <APP> [ARGS]...
 **Options:**
 - `-w, --working-dir <PATH>` - Input directory path (default: current directory)
 - `-e, --container-engine <ENGINE>` - Container engine to use (default: docker)
-
-**Available Apps:**
-- `rosetta` - Run Rosetta protocols and applications
-- `score` - Run Rosetta score command (shorthand for common scoring tasks)
-- `pyrosetta` - Execute PyRosetta Python scripts with PyRosetta environment
-- `rfdiffusion` - Run RFdiffusion for protein structure generation
-- `proteinmpnn` - Run ProteinMPNN for protein sequence design
-- `proteinmpnn-script` - Run ProteinMPNN helper scripts for preprocessing and analysis
-- `ligandmpnn` - Run LigandMPNN for protein-ligand interface design
-- `foundry` - Run Foundry toolkit (RFDiffusion3, LigandMPNN, RoseTTAFold3) for integrated protein design workflows
-
-**Container Engine Support:**
-
-| App | Docker | HPC Containers (Singularity/Apptainer) | Native |
-|-----|--------|----------------------------------------|--------|
-| `rosetta` | ✓ | ✓ |  |
-| `score` | ✓ | ✓ |  |
-| `pyrosetta` | ✓ | ✓ |  |
-| `rfdiffusion` | ✓ | ✓ | ✓ |
-| `proteinmpnn` | ✓ | ✓ |  |
-| `proteinmpnn-script` | ✓ | ✓ |  |
-| `ligandmpnn` | ✓ | ✓ | |
-| `foundry` | ✓ | ✓ | ✓ |
 
 ### `install`
 
