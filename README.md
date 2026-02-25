@@ -7,14 +7,16 @@ A command line tool to run various biomolecular structural prediction, analysis 
 `rc` provides a unified interface for running Rosetta and other biomolecular modeling applications through container engines like Docker, Singularity, or Apptainer.
 
 **Available Apps:**
-- `rosetta` - Run Rosetta protocols and applications
-- `score` - Run Rosetta score command (shorthand for common scoring tasks)
-- `pyrosetta` - Execute PyRosetta Python scripts with PyRosetta environment
-- `rfdiffusion` - Run RFdiffusion for protein structure generation
-- `proteinmpnn` - Run ProteinMPNN for protein sequence design
+- [`rosetta`](https://docs.rosettacommons.org/docs/latest/Home) - Run Rosetta protocols and applications
+- [`score`](https://pubs.acs.org/doi/abs/10.1021/acs.jctc.7b00125) - Run Rosetta score command (shorthand for common scoring tasks)
+- [`pyrosetta`](https://www.pyrosetta.org/) - Execute PyRosetta Python scripts with PyRosetta environment
+- [`rfdiffusion`](https://sites.google.com/omsf.io/rfdiffusion) - Run RFdiffusion for protein structure generation
+- [`proteinmpnn`](https://github.com/dauparas/ProteinMPNN) - Run ProteinMPNN for protein sequence design
 - `proteinmpnn-script` - Run ProteinMPNN helper scripts for preprocessing and analysis
-- `ligandmpnn` - Run LigandMPNN for protein-ligand interface design
-- `foundry` - Run Foundry toolkit (RFDiffusion3, LigandMPNN, RoseTTAFold3) for integrated protein design workflows
+- [`ligandmpnn`](https://github.com/dauparas/LigandMPNN) - Run LigandMPNN for protein-ligand interface design
+- [`foundry`](https://rosettacommons.github.io/foundry/) - Run Foundry toolkit (RFDiffusion3, LigandMPNN, RoseTTAFold3) for integrated protein design workflows
+
+See [App Usage Examples](#app-usage-examples) for how to run each of these tools using `rc`.
 
 **Container Engine Support:**
 
@@ -30,6 +32,7 @@ A command line tool to run various biomolecular structural prediction, analysis 
 | `foundry` | ✓ | ✓ | ✓ |
 
 ## Installation
+`rc` uses `cargo`, Rust's package manager and build tool, for fast and seamless installation. To run the following command, you will need to have [Rust installed](https://rust-lang.org/tools/install/). 
 
 ```bash
 cargo install --path .
@@ -52,7 +55,7 @@ This command will:
 - Mount the working directory into the container
 - Run the Rosetta score application
 - Output the score file to `output.sc`
-- Log the executed command to a log file for reproducibility
+- Log the executed command to a log file for reproducibility, see [Command Logging](#command-logging)
 
 ### Specifying a Container Engine
 
@@ -101,6 +104,7 @@ Run an application with optional arguments.
 ```bash
 rc run [OPTIONS] <APP> [ARGS]...
 ```
+The `[OPTIONS]` are `rc`-specific, while the `[ARGS]` are specific to the app you are running.
 
 **Options:**
 - `-w, --working-dir <PATH>` - Input directory path (default: current directory)
