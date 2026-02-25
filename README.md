@@ -1,6 +1,6 @@
 # rc
 
-A command line tool to run various biomolecular structural prediction, analysis and design applications using containerized environments.
+`rc` is a command-line tool for running and reproducing calculations with containerized biomolecular software. It simplifies everything from mounting local directories to logging executed commands, helping you run complex workflows reliably and repeatably. Designed for reproducible research, `rc` aims to become a seamless part of your daily computational workflow.
 
 ## Overview
 
@@ -8,17 +8,20 @@ A command line tool to run various biomolecular structural prediction, analysis 
 
 **Available Apps:**
 - [`rosetta`](https://docs.rosettacommons.org/docs/latest/Home) - Run Rosetta protocols and applications
-- [`score`](https://pubs.acs.org/doi/abs/10.1021/acs.jctc.7b00125) - Run Rosetta score command (shorthand for common scoring tasks)
+- [`score`](https://docs.rosettacommons.org/docs/latest/application_documentation/analysis/score-commands) - Run Rosetta score command (shorthand for common scoring tasks)
 - [`pyrosetta`](https://www.pyrosetta.org/) - Execute PyRosetta Python scripts with PyRosetta environment
 - [`rfdiffusion`](https://sites.google.com/omsf.io/rfdiffusion) - Run RFdiffusion for protein structure generation
 - [`proteinmpnn`](https://github.com/dauparas/ProteinMPNN) - Run ProteinMPNN for protein sequence design
-- `proteinmpnn-script` - Run ProteinMPNN helper scripts for preprocessing and analysis
+- [`proteinmpnn-script`](https://github.com/dauparas/ProteinMPNN) - Run ProteinMPNN helper scripts for preprocessing and analysis
 - [`ligandmpnn`](https://github.com/dauparas/LigandMPNN) - Run LigandMPNN for protein-ligand interface design
 - [`foundry`](https://rosettacommons.github.io/foundry/) - Run Foundry toolkit (RFDiffusion3, LigandMPNN, RoseTTAFold3) for integrated protein design workflows
 
 See [App Usage Examples](#app-usage-examples) for how to run each of these tools using `rc`.
 
 **Container Engine Support:**
+
+> [!NOTE]
+> Here, 'Native' means that `rc` can work with a local (non-containerized) installation of a particular tool. 
 
 | App | Docker | HPC Containers (Singularity/Apptainer) | Native |
 |-----|--------|----------------------------------------|--------|
@@ -140,6 +143,9 @@ rc run rosetta score \
 
 #### Run other Rosetta protocols
 
+> [!IMPORTANT]
+> A list of available Rosetta protocols/applications can be found [here](https://docs.rosettacommons.org/docs/latest/application_documentation/Application-Documentation). 
+
 ```bash
 rc run rosetta relax \
     -in:file:s input.pdb \
@@ -216,6 +222,10 @@ rc run proteinmpnn \
 Foundry provides an integrated toolkit combining RFDiffusion3 (rfd3), LigandMPNN (mpnn), and RoseTTAFold3 (rf3) for comprehensive protein design workflows. It supports native runs without containers (uses `-e none`).
 
 #### Complete workflow example
+
+> [!NOTE]
+> Each `rc run` invocation will produce a separate log file. So even though
+> these commands are run as part of a workflow, each will produce its own log file.
 
 First, create an input JSON file (e.g., `input.json`):
 
