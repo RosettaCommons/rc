@@ -54,7 +54,7 @@ rc run -w /path/to/working/directory rosetta score \
 ```
 
 This command will:
-- Use the default Docker container engine
+- Use the default [Docker](https://www.docker.com/) container engine
 - Mount the working directory into the container
 - Run the Rosetta score application
 - Output the score file to `output.sc`
@@ -69,9 +69,9 @@ rc run -e singularity rosetta score -in:file:s structure.pdb
 ```
 
 Supported container engines:
-- `docker` (default)
-- `singularity`
-- `apptainer`
+- [`docker`](https://docs.docker.com/engine/install/) (default)
+- [`singularity`](https://docs.sylabs.io/guides/latest/user-guide/)
+- [`apptainer`](https://apptainer.org/)
 - `none` (run natively without containers - supported by RFDiffusion and Foundry)
 
 ### Working Directory
