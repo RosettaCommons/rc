@@ -29,7 +29,7 @@ See [App Usage Examples](#app-usage-examples) for how to run each of these tools
 | `score` | ✓ | ✓ |  |
 | `pyrosetta` | ✓ | ✓ |  |
 | `rfdiffusion` | ✓ | ✓ | ✓ |
-| `proteinmpnn` | ✓ | ✓ |  |
+| `proteinmpnn` | ✓ | ✓ | ✓ |
 | `proteinmpnn-script` | ✓ | ✓ |  |
 | `ligandmpnn` | ✓ | ✓ | |
 | `foundry` | ✓ | ✓ | ✓ |
@@ -331,16 +331,3 @@ rc -v run rosetta score -in:file:s structure.pdb
 ```
 
 This will show detailed information including the exact command being executed and where it's being logged.
-
-## Requirements
-
-- One of the supported container engines (Docker, Singularity, or Apptainer)
-- Appropriate container images for the applications you want to run
-
-## License
-
-See LICENSE file for details.
-
-## Author
-
-Sergey Lyskov

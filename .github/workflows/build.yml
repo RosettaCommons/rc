@@ -90,5 +90,4 @@ jobs:
 
       - name: Run Native tests
         run: |
-          cargo install cargo-nextest --locked
           cargo nextest run -F native-tests,high-memory-tests

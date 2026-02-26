@@ -148,8 +148,11 @@ fn main() -> Result<()> {
                 .clone()
                 .unwrap_or_else(|| Utf8PathBuf::from("."))
                 .canonicalize()
-                .unwrap();
-            let working_dir = Utf8PathBuf::try_from(working_dir).unwrap();
+                .unwrap_or_else(|_| {
+                    panic!("{}", "Specified working directory does not exist".red())
+                });
+            let working_dir = Utf8PathBuf::try_from(working_dir)
+                .unwrap_or_else(|_| panic!("{}", "Working dir path contains invalid UTF-8".red()));
 
             run::run(app, app_args.clone(), container_engine, working_dir)
         }

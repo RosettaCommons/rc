@@ -191,7 +191,7 @@ impl App {
             App::Rosetta => todo!("not implemented"), // rosetta::native_spec(app_args),
             App::PyRosetta => todo!("not implemented"), // pyrosetta::native_spec(app_args),
             App::Rfdiffusion => rfdiffusion::native_spec(app_args, working_dir),
-            App::Proteinmpnn => todo!("not implemented"), // proteinmpnn::native_spec(app_args),
+            App::Proteinmpnn => proteinmpnn::native_spec(app_args, working_dir),
             App::ProteinmpnnScript => todo!("not implemented"), // proteinmpnn_script::native_spec(app_args),
             App::Ligandmpnn => todo!("not implemented"), // ligandmpnn::native_spec(app_args),
             App::Foundry => foundry::native_spec(app_args, working_dir),
