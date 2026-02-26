@@ -193,7 +193,7 @@ impl App {
             App::Rfdiffusion => rfdiffusion::native_spec(app_args, working_dir),
             App::Proteinmpnn => proteinmpnn::native_spec(app_args, working_dir),
             App::ProteinmpnnScript => todo!("not implemented"), // proteinmpnn_script::native_spec(app_args),
-            App::Ligandmpnn => todo!("not implemented"), // ligandmpnn::native_spec(app_args),
+            App::Ligandmpnn => ligandmpnn::native_spec(app_args, working_dir),
             App::Foundry => foundry::native_spec(app_args, working_dir),
             App::Picap => todo!("not implemented"), // picap::native_spec(app_args),
         }

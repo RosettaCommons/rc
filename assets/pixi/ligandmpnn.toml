@@ -1,0 +1,45 @@
+[workspace]
+name = "ligandmpnn"
+version = "0.0.1"
+description = "Pixi environment for https://github.com/dauparas/LigandMPNN"
+platforms = ["linux-64"]
+channels = ["conda-forge"]
+
+[activation.env]
+LIGANDMPNN_DIR = "$PIXI_PROJECT_ROOT/ligandmpnn-repo-clone"
+LIGANDMPNN_WEIGHTS = "$LIGANDMPNN_DIR/model_params"
+
+[dependencies]
+python = "3.11.*"
+pip = "*"
+setuptools = "<70"
+wheel = "*"
+git = "*"
+wget = "*"
+ca-certificates = "*"
+mc = "*"
+
+[pypi-options]
+index-url = "https://pypi.org/simple"
+
+[tasks]
+setup = { depends-on = ["clone", "install_requirements", "get_model_params"] }
+
+[tasks.clone]
+cmd = "rm -rf ligandmpnn-repo-clone && git clone https://github.com/dauparas/LigandMPNN.git ligandmpnn-repo-clone"
+
+[tasks.install_requirements]
+depends-on = ["clone"]
+cwd = "ligandmpnn-repo-clone"
+cmd = "python -m pip install -r requirements.txt --progress-bar off --retries 20 --timeout 120"
+
+[tasks.get_model_params]
+depends-on = ["install_requirements"]
+cwd = "ligandmpnn-repo-clone"
+cmd = "bash get_model_params.sh './model_params'"
+
+
+[tasks.execute]
+xargs = ["args"]
+cwd = "ligandmpnn-repo-clone"
+cmd = "python run.py {{args}}"

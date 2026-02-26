@@ -1,6 +1,6 @@
-# rc
+# RosettaCommons Run
 
-`rc` is a command-line tool for running and reproducing calculations with containerized biomolecular software. It simplifies everything from mounting local directories to logging executed commands, helping you run complex workflows reliably and repeatably. Designed for reproducible research, `rc` aims to become a seamless part of your daily computational workflow.
+RosettaCommons Run utility (`rc`) is a command-line tool for running and reproducing calculations with containerized biomolecular software. It simplifies everything from mounting local directories to logging executed commands, helping you run complex workflows reliably and repeatably. Designed for reproducible research, `rc` aims to become a seamless part of your daily computational workflow.
 
 ## Overview
 
@@ -31,7 +31,7 @@ See [App Usage Examples](#app-usage-examples) for how to run each of these tools
 | `rfdiffusion` | ✓ | ✓ | ✓ |
 | `proteinmpnn` | ✓ | ✓ | ✓ |
 | `proteinmpnn-script` | ✓ | ✓ |  |
-| `ligandmpnn` | ✓ | ✓ | |
+| `ligandmpnn` | ✓ | ✓ | ✓ |
 | `foundry` | ✓ | ✓ | ✓ |
 
 ## Installation
