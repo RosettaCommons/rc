@@ -187,8 +187,8 @@ impl App {
 
     pub fn native_spec(self, app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
         match self {
-            App::Score => todo!("not implemented"), // score::native_spec(app_args),
-            App::Rosetta => todo!("not implemented"), // rosetta::native_spec(app_args),
+            App::Score => score::native_spec(app_args, working_dir),
+            App::Rosetta => rosetta::native_spec(app_args, working_dir),
             App::PyRosetta => todo!("not implemented"), // pyrosetta::native_spec(app_args),
             App::Rfdiffusion => rfdiffusion::native_spec(app_args, working_dir),
             App::Proteinmpnn => proteinmpnn::native_spec(app_args, working_dir),

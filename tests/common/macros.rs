@@ -4,8 +4,8 @@ macro_rules! engine_tests {
     ($test_fn:ident $(; $($feature:literal),* $(,)?)? ) => {
         $crate::common::engine_tests!(
             @gen $test_fn;
-            //engines(docker, singularity, apptainer, none);
-            engines(docker, singularity, apptainer);
+            //engines(docker, singularity, apptainer);
+            engines(docker, singularity, apptainer, none);
             features($($($feature),*)?)
         );
     };

@@ -25,8 +25,8 @@ See [App Usage Examples](#app-usage-examples) for how to run each of these tools
 
 | App | Docker | HPC Containers (Singularity/Apptainer) | Native |
 |-----|--------|----------------------------------------|--------|
-| `rosetta` | ✓ | ✓ |  |
-| `score` | ✓ | ✓ |  |
+| `rosetta` | ✓ | ✓ | ✓ |
+| `score` | ✓ | ✓ | ✓ |
 | `pyrosetta` | ✓ | ✓ |  |
 | `rfdiffusion` | ✓ | ✓ | ✓ |
 | `proteinmpnn` | ✓ | ✓ | ✓ |

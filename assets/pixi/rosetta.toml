@@ -1,0 +1,20 @@
+[workspace]
+name = "rosetta"
+version = "0.0.1"
+description = "Pixi environment for https://github.com/RosettaCommons/rosetta Rosetta protocols"
+platforms = ["linux-64", "osx-64", "osx-arm64"]
+
+channels = ["https://conda.rosettacommons.org", "conda-forge"]
+
+[dependencies]
+rosetta = "*"
+
+[tasks]
+setup = { depends-on = ["score"] }
+
+[tasks.score]
+cmd = "score -s $CONDA_PREFIX/database/additional_protocol_data/antibody/antibody_database/4fqq_trunc.pdb"
+
+[tasks.execute]
+args = ["args"]
+cmd = "{{args}}"

@@ -3,7 +3,7 @@ use assert_fs::TempDir;
 
 mod common;
 
-common::engine_tests!(rfdiffusion; engines(docker, apptainer, singularity, none); "high-memory-tests");
+common::engine_tests!(rfdiffusion; "high-memory-tests");
 
 fn rfdiffusion(engine: &str) {
     use assert_fs::assert::PathAssert;

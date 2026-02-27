@@ -3,7 +3,7 @@ use assert_fs::TempDir;
 
 mod common;
 
-common::engine_tests!(proteinmpnn; engines(docker, apptainer, singularity, none));
+common::engine_tests!(proteinmpnn);
 
 fn proteinmpnn(engine: &str) {
     use assert_fs::assert::PathAssert;

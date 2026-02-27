@@ -40,6 +40,6 @@ cmd = "bash get_model_params.sh './model_params'"
 
 
 [tasks.execute]
-xargs = ["args"]
+args = ["args"]
 cwd = "ligandmpnn-repo-clone"
 cmd = "python run.py {{args}}"

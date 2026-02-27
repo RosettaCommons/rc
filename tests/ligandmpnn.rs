@@ -3,7 +3,7 @@ use assert_fs::TempDir;
 
 mod common;
 
-common::engine_tests!(ligandmpnn; engines(docker, apptainer, singularity, none));
+common::engine_tests!(ligandmpnn);
 
 fn ligandmpnn(engine: &str) {
     use assert_fs::assert::PathAssert;

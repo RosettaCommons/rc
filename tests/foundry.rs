@@ -3,7 +3,7 @@ use assert_fs::TempDir;
 
 mod common;
 
-common::engine_tests!(foundry_implicit_weights_specification; engines(docker, apptainer, singularity, none) );
+common::engine_tests!(foundry_implicit_weights_specification);
 
 fn foundry_implicit_weights_specification(engine: &str) {
     use assert_fs::assert::PathAssert;
@@ -43,7 +43,7 @@ fn foundry_implicit_weights_specification(engine: &str) {
     }
 }
 
-common::engine_tests!(foundry_explicit_weights_specification);
+common::engine_tests!(foundry_explicit_weights_specification; engines(docker, apptainer, singularity));
 
 fn foundry_explicit_weights_specification(engine: &str) {
     use assert_fs::assert::PathAssert;

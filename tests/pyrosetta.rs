@@ -4,7 +4,7 @@ use assert_cmd::{assert::OutputAssertExt, cargo::cargo_bin_cmd};
 use assert_fs::TempDir;
 use predicates::prelude::*;
 
-common::engine_tests!(pyrosetta);
+common::engine_tests!(pyrosetta; engines(docker, apptainer, singularity));
 
 fn pyrosetta(engine: &str) {
     use assert_fs::assert::PathAssert;
