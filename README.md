@@ -2,6 +2,31 @@
 
 RosettaCommons Run utility (`rc`) is a command-line tool for running and reproducing calculations with containerized biomolecular software. It simplifies everything from mounting local directories to logging executed commands, helping you run complex workflows reliably and repeatably. Designed for reproducible research, `rc` aims to become a seamless part of your daily computational workflow.
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Installation](#installation)
+  - [Using Pre-built Binaries (Recommended)](#using-pre-built-binaries-recommended)
+  - [Build from Source](#build-from-source)
+- [Basic Usage](#basic-usage)
+  - [Running Rosetta Score](#running-rosetta-score)
+  - [Specifying a Container Engine](#specifying-a-container-engine)
+  - [Working Directory](#working-directory)
+- [Command Logging](#command-logging)
+- [Commands](#commands)
+  - [`run`](#run)
+  - [`install`](#install)
+  - [`clean`](#clean)
+- [App Usage Examples](#app-usage-examples)
+  - [Rosetta](#rosetta)
+  - [PyRosetta](#pyrosetta)
+  - [RFdiffusion](#rfdiffusion)
+  - [ProteinMPNN](#proteinmpnn)
+  - [ProteinMPNN-Script](#proteinmpnn-script)
+  - [Foundry](#foundry)
+  - [General Options](#general-options)
+- [Verbose Mode](#verbose-mode)
+
 ## Overview
 
 `rc` provides a unified interface for running Rosetta and other biomolecular modeling applications through container engines like Docker, Singularity, or Apptainer.
@@ -228,6 +253,17 @@ rc run proteinmpnn \
     --num_seq_per_target 10 \
     --sampling_temp 0.1
 ```
+
+### ProteinMPNN-Script
+
+ProteinMPNN-Script provides access to helper scripts for preprocessing structures and analyzing ProteinMPNN results.
+
+#### Parse multiple PDB chains
+
+```bash
+rc run proteinmpnn-script parse_multiple_chains.py --input_path=monomers --output_path=parsed_pdbs.jsonl
+```
+
 
 ### Foundry
 
