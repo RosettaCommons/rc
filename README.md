@@ -35,6 +35,18 @@ See [App Usage Examples](#app-usage-examples) for how to run each of these tools
 | `foundry` | ✓ | ✓ | ✓ |
 
 ## Installation
+
+### Using Pre-built Binaries (Recommended)
+
+The easiest way to install `rc` is to download a pre-built binary for your platform:
+
+- **[Nightly builds](https://github.com/RosettaCommons/rc/releases/tag/nightly)** - Latest development version with newest features
+- **[Stable releases](https://github.com/RosettaCommons/rc/releases)** - Tested and stable versions
+
+Download the appropriate binary for your operating system, make it executable, and add it to your PATH.
+
+### Build from Source
+
 `rc` uses `cargo`, Rust's package manager and build tool, for fast and seamless installation. To run the following command, you will need to have [Rust installed](https://rust-lang.org/tools/install/). 
 
 ```bash
