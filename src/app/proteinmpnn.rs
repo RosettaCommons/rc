@@ -47,7 +47,9 @@ fn map_input_and_output_options(mut app_args: Vec<String>, working_dir: &Utf8Pat
     app_args
 }
 
-pub fn native_spec(app_args: Vec<String>, working_dir: &Utf8Path) -> super::NativeRunSpec {
+pub fn native_spec(mut app_args: Vec<String>, working_dir: &Utf8Path) -> super::NativeRunSpec {
+    app_args.splice(0..0, ["python".into(), "protein_mpnn_run.py".into()]);
+
     let app_args = map_input_and_output_options(app_args, working_dir);
 
     let app_args = app_args

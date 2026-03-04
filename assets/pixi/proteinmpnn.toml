@@ -36,10 +36,10 @@ setup = { depends-on = ["clone"] }
 [tasks.clone]
 cmd = "rm -rf proteinmpnn-repo-clone && git clone https://github.com/dauparas/ProteinMPNN.git proteinmpnn-repo-clone"
 
-# Run ProteinMPNN with arbitrary args:
+# Run ProteinMPNN / ProteinMPNN-Scripts with arbitrary args
 [tasks.execute]
 args = ["args"]
-cmd = "python protein_mpnn_run.py {{args}}"
+cmd = "{{args}}"
 cwd = "proteinmpnn-repo-clone"
 
 [activation]

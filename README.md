@@ -30,7 +30,7 @@ See [App Usage Examples](#app-usage-examples) for how to run each of these tools
 | `pyrosetta` | ✓ | ✓ |  |
 | `rfdiffusion` | ✓ | ✓ | ✓ |
 | `proteinmpnn` | ✓ | ✓ | ✓ |
-| `proteinmpnn-script` | ✓ | ✓ |  |
+| `proteinmpnn-script` | ✓ | ✓ | ✓ |
 | `ligandmpnn` | ✓ | ✓ | ✓ |
 | `foundry` | ✓ | ✓ | ✓ |
 

@@ -53,7 +53,7 @@ fn proteinmpnn(engine: &str) {
     // std::thread::sleep(std::time::Duration::from_secs(60));
 }
 
-common::engine_tests!(proteinmpnn_scripts; engines(docker, singularity, apptainer));
+common::engine_tests!(proteinmpnn_scripts);
 
 fn proteinmpnn_scripts(engine: &str) {
     use assert_fs::assert::PathAssert;
