@@ -40,13 +40,20 @@ impl Executor {
             fs::create_dir_all(&d)?;
         }
 
-        let command = util::Command::new(engine.0)
-            .arg("run")
-            .args(options.split(' '))
-            .arg(image_path)
-            .args(spec.args.clone())
-            //.message("")
-            .live();
+        let command = if let Some(entrypoint) = &spec.entrypoint {
+            util::Command::new(engine.0)
+                .arg("exec")
+                .args(options.split(' '))
+                .arg(image_path)
+                .arg(entrypoint)
+        } else {
+            util::Command::new(engine.0)
+                .arg("run")
+                .args(options.split(' '))
+                .arg(image_path)
+        }
+        .args(spec.args.clone())
+        .live();
 
         let result = command.call();
 

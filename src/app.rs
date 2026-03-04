@@ -36,7 +36,7 @@ pub enum App {
     Proteinmpnn,
 
     /// Run the ProteinMPNN Script command https://github.com/dauparas/ProteinMPNN
-    #[value(aliases = ["Proteinmpnn-script", "ProteinMPNN-Script"])]
+    #[value(aliases = ["proteinmpnn-script", "ProteinMPNN-Script"])]
     ProteinmpnnScript,
 
     /// Run the LigandMPNN command https://github.com/dauparas/LigandMPNN
@@ -97,6 +97,7 @@ pub struct ContainerRunSpec {
     pub image: Image,
     pub args: Vec<String>,
     pub mounts: HashMap<MountRole, String>,
+    pub entrypoint: Option<String>,
 }
 
 pub struct NativeRunSpec {
@@ -104,17 +105,13 @@ pub struct NativeRunSpec {
     pub args: Vec<String>,
 }
 
-// pub struct RunSpec {
-//     pub container: ContainerRunSpec,
-//     pub native: Option<NativeRunSpec>,
-// }
-
 impl ContainerRunSpec {
     pub fn new(image: impl Into<String>, args: Vec<String>) -> Self {
         Self {
             image: Image(image.into()),
             args,
             mounts: HashMap::new(),
+            entrypoint: None,
         }
     }
     pub fn with_prefixed_args<I1, I2, S1, S2>(
@@ -138,6 +135,7 @@ impl ContainerRunSpec {
             image: Image(image.into()),
             args: full_args,
             mounts: HashMap::new(),
+            entrypoint: None,
         }
     }
 
@@ -147,6 +145,10 @@ impl ContainerRunSpec {
     }
     pub fn working_dir(mut self, p: impl Into<String>) -> Self {
         self.mounts.insert(MountRole::WorkingDir, p.into());
+        self
+    }
+    pub fn entrypoint(mut self, p: impl Into<String>) -> Self {
+        self.entrypoint = Some(p.into());
         self
     }
 }

@@ -39,6 +39,10 @@ impl Executor {
             fs::create_dir_all(&d)?;
         }
 
+        if let Some(entrypoint) = &spec.entrypoint {
+            options.push_str(&format!(" --entrypoint {entrypoint}"));
+        }
+
         let command = util::Command::new("docker")
             .arg("run")
             .args(options.split(' '))
