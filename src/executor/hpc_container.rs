@@ -3,9 +3,9 @@ use std::fs;
 use camino::Utf8PathBuf;
 
 use crate::{
-    app::{ContainerRunSpec, MountRole},
-    executor::{Executor, Image, Telemetry},
+    executor::{Executor, Telemetry},
     run,
+    spec::{ContainerConfig, MountRole},
     util::{self, Command, dirs},
 };
 
@@ -18,7 +18,7 @@ struct HpcContainerEngine(String);
 //hpc_container_engine @ HpcContainerEngine(engine): &HpcContainerEngine,
 //
 impl Executor {
-    pub(super) fn execute_with_hpc_container_engine(&self, spec: ContainerRunSpec) -> Result<()> {
+    pub(super) fn execute_with_hpc_container_engine(&self, spec: ContainerConfig) -> Result<()> {
         assert!(matches!(
             self.engine,
             run::ContainerEngine::Singularity | run::ContainerEngine::Apptainer
@@ -28,7 +28,7 @@ impl Executor {
 
         let engine = HpcContainerEngine(self.engine.to_string());
 
-        let image_path = self.build_image(&engine, &spec.image);
+        let image_path = self.build_image(&engine, self.app.spec().container_image());
 
         let mut options = format!("--bind {}:/w --pwd /w", self.working_dir);
 
@@ -95,17 +95,13 @@ impl Executor {
     fn build_image(
         &self,
         HpcContainerEngine(engine): &HpcContainerEngine,
-        image: &Image,
+        image: &str,
     ) -> Utf8PathBuf {
-        let image_path = self.image_path(image);
+        let image_path = Self::hpc_image_path(image);
         if !image_path.exists() {
             println!("Could not find {}, rebuilding...", image_path.green());
             Command::new(engine)
-                .args([
-                    "pull",
-                    image_path.as_str(),
-                    &format!("docker://{}", image.0),
-                ])
+                .args(["pull", image_path.as_str(), &format!("docker://{}", image)])
                 .live()
                 .exec()
                 .expect("error building image");
@@ -114,14 +110,13 @@ impl Executor {
         image_path
     }
 
-    fn images_root(&self) -> Utf8PathBuf {
+    fn hpc_images_root() -> Utf8PathBuf {
         let root = dirs::cache_root().join("hpc");
         std::fs::create_dir_all(&root).unwrap();
         root
     }
 
-    fn image_path(&self, Image(image_path): &Image) -> Utf8PathBuf {
-        self.images_root()
-            .join(format!("{}.sif", image_path.replace("/", "-")))
+    fn hpc_image_path(image_path: &str) -> Utf8PathBuf {
+        Self::hpc_images_root().join(format!("{}.sif", image_path.replace("/", "-")))
     }
 }

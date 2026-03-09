@@ -10,7 +10,7 @@ use crate::executor::Telemetry;
 use crate::run;
 use crate::util::Command;
 use crate::util::ensure_dir_signature;
-use crate::{app::NativeRunSpec, executor::Executor};
+use crate::{executor::Executor, spec::NativeRunSpec};
 
 impl Executor {
     pub(super) fn execute_native(&self, spec: NativeRunSpec) -> Result<()> {

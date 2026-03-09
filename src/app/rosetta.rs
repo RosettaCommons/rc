@@ -1,15 +1,28 @@
 use camino::Utf8Path;
 
 use crate::{
-    app::{ContainerRunSpec, NativeRunSpec},
+    spec::{AppSpec, ContainerConfig, NativeRunSpec},
     util::include_asset,
 };
 
-pub fn container_spec(app_args: Vec<String>) -> ContainerRunSpec {
-    ContainerRunSpec::new("rosettacommons/rosetta:serial", app_args).working_dir("/w")
-}
+pub struct Rosetta;
+pub static ROSETTA: Rosetta = Rosetta;
 
-pub fn native_spec(mut app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
-    app_args.insert(0, format!("cd {working_dir} &&"));
-    NativeRunSpec::new(include_asset!("pixi/rosetta.toml"), app_args)
+impl AppSpec for Rosetta {
+    fn container_image(&self) -> &'static str {
+        "rosettacommons/rosetta:serial"
+    }
+
+    fn pixi_recipe(&self) -> Option<&'static str> {
+        Some(include_asset!("pixi/rosetta.toml"))
+    }
+
+    fn container_spec(&self, app_args: Vec<String>) -> ContainerConfig {
+        ContainerConfig::new(app_args).working_dir("/w")
+    }
+
+    fn native_spec(&self, mut app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
+        app_args.insert(0, format!("cd {working_dir} &&"));
+        NativeRunSpec::new(self.pixi_recipe().unwrap(), app_args)
+    }
 }

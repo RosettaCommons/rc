@@ -5,10 +5,7 @@ mod native;
 use anyhow::Result;
 use camino::{Utf8Path, Utf8PathBuf};
 
-use crate::{
-    app::{App, Image},
-    run::ContainerEngine,
-};
+use crate::{app::App, run::ContainerEngine};
 
 pub struct Executor {
     app: App,
@@ -27,14 +24,16 @@ impl Executor {
 
     pub fn execute(&self, app_args: Vec<String>) -> Result<()> {
         match self.engine {
-            ContainerEngine::Docker => self.execute_with_docker(self.app.container_spec(app_args)),
+            ContainerEngine::Docker => {
+                self.execute_with_docker(self.app.spec().container_spec(app_args))
+            }
 
             ContainerEngine::Singularity | ContainerEngine::Apptainer => {
-                self.execute_with_hpc_container_engine(self.app.container_spec(app_args))
+                self.execute_with_hpc_container_engine(self.app.spec().container_spec(app_args))
             }
 
             ContainerEngine::None => {
-                self.execute_native(self.app.native_spec(app_args, &self.working_dir))
+                self.execute_native(self.app.spec().native_spec(app_args, &self.working_dir))
             }
         }
     }

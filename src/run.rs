@@ -5,7 +5,7 @@ use yansi::Paint;
 
 use crate::{app, executor};
 
-#[derive(ValueEnum, Clone, Copy, Debug, strum::Display)]
+#[derive(ValueEnum, Clone, Copy, Debug, strum::Display, strum::EnumIter)]
 #[strum(serialize_all = "lowercase")] //  "kebab-case"
 pub enum ContainerEngine {
     Docker,

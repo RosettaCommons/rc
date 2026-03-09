@@ -1,9 +1,12 @@
 use camino::{Utf8Path, Utf8PathBuf};
 
 use crate::{
-    app::{ContainerRunSpec, NativeRunSpec},
+    spec::{AppSpec, ContainerConfig, NativeRunSpec},
     util::include_asset,
 };
+
+pub struct Foundry;
+pub static FOUNDRY: Foundry = Foundry;
 
 fn with_default_checkpoints(mut app_args: Vec<String>, weights_path: &str) -> Vec<String> {
     match app_args[0].as_str() {
@@ -31,19 +34,6 @@ fn with_default_checkpoints(mut app_args: Vec<String>, weights_path: &str) -> Ve
         _ => {}
     }
     app_args
-}
-
-pub fn container_spec(app_args: Vec<String>) -> ContainerRunSpec {
-    assert!(
-        !(app_args.is_empty() || app_args[0].starts_with("-")),
-        "Foundry arguments must include a protocol name as first argument"
-    );
-
-    ContainerRunSpec::new(
-        "rosettacommons/foundry:weights",
-        with_default_checkpoints(app_args, "/weights"),
-    )
-    .working_dir("/w")
 }
 
 fn make_absolute(working_dir: &Utf8Path, path_str: &str) -> Utf8PathBuf {
@@ -103,29 +93,48 @@ fn map_input_and_output_options(mut app_args: Vec<String>, working_dir: &Utf8Pat
     app_args
 }
 
-pub fn native_spec(app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
-    assert!(
-        !(app_args.is_empty() || app_args[0].starts_with("-")),
-        "Foundry arguments must include a protocol name as first argument"
-    );
+impl AppSpec for Foundry {
+    fn container_image(&self) -> &'static str {
+        "rosettacommons/foundry:weights"
+    }
 
-    let app_args = app_args
-        .into_iter()
-        .map(|a| shell_escape::escape(a.into()).into())
-        .collect::<Vec<_>>();
+    fn pixi_recipe(&self) -> Option<&'static str> {
+        Some(include_asset!("pixi/foundry.toml"))
+    }
 
-    let app_args = with_default_checkpoints(app_args, "$FOUNDRY_CHECKPOINTS");
+    fn container_spec(&self, app_args: Vec<String>) -> ContainerConfig {
+        assert!(
+            !(app_args.is_empty() || app_args[0].starts_with("-")),
+            "Foundry arguments must include a protocol name as first argument"
+        );
 
-    let app_args = match app_args[0].as_str() {
-        "mpnn" => map_input_and_output_options(app_args, working_dir),
-        "rf3" | "rfd3" => map_inputs_and_out_dir(app_args, working_dir),
-        _ => app_args,
-    };
+        ContainerConfig::new(with_default_checkpoints(app_args, "/weights")).working_dir("/w")
+    }
 
-    // for arg in &mut app_args {
-    //     *arg = shell_escape::escape(arg.as_str().into()).to_string();
-    // }
-    // app_args.insert(0, format!("cd {} && ", working_dir.to_string_lossy()));
+    fn native_spec(&self, app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
+        assert!(
+            !(app_args.is_empty() || app_args[0].starts_with("-")),
+            "Foundry arguments must include a protocol name as first argument"
+        );
 
-    NativeRunSpec::new(include_asset!("pixi/foundry.toml"), app_args)
+        let app_args = app_args
+            .into_iter()
+            .map(|a| shell_escape::escape(a.into()).into())
+            .collect::<Vec<_>>();
+
+        let app_args = with_default_checkpoints(app_args, "$FOUNDRY_CHECKPOINTS");
+
+        let app_args = match app_args[0].as_str() {
+            "mpnn" => map_input_and_output_options(app_args, working_dir),
+            "rf3" | "rfd3" => map_inputs_and_out_dir(app_args, working_dir),
+            _ => app_args,
+        };
+
+        // for arg in &mut app_args {
+        //     *arg = shell_escape::escape(arg.as_str().into()).to_string();
+        // }
+        // app_args.insert(0, format!("cd {} && ", working_dir.to_string_lossy()));
+
+        NativeRunSpec::new(self.pixi_recipe().unwrap(), app_args)
+    }
 }

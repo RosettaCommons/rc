@@ -1,32 +1,12 @@
 use camino::{Utf8Path, Utf8PathBuf};
 
 use crate::{
-    app::{ContainerRunSpec, NativeRunSpec},
+    spec::{AppSpec, ContainerConfig, NativeRunSpec},
     util::include_asset,
 };
 
-pub fn container_spec(app_args: Vec<String>) -> ContainerRunSpec {
-    ContainerRunSpec::with_prefixed_args(
-        "rosettacommons/ligandmpnn",
-        [
-            "--out_folder=/w",
-            "--checkpoint_protein_mpnn",
-            "/app/ligandmpnn/model_params/proteinmpnn_v_48_020.pt",
-        ],
-        app_args,
-    )
-    .working_dir("/w")
-
-    // app_args.splice(
-    //     0..0,
-    //     [
-    //         "--out_folder=/w".into(),
-    //         "--checkpoint_protein_mpnn".into(),
-    //         "/app/ligandmpnn/model_params/proteinmpnn_v_48_020.pt".into(),
-    //     ],
-    // );
-    // RunSpec::new("rosettacommons/ligandmpnn", app_args).working_dir("/w")
-}
+pub struct Ligandmpnn;
+pub static LIGANDMPNN: Ligandmpnn = Ligandmpnn;
 
 fn map_input_and_output_options(mut app_args: Vec<String>, working_dir: &Utf8Path) -> Vec<String> {
     const OPTIONS: [&str; 2] = ["--pdb_path", "--out_folder"];
@@ -61,21 +41,53 @@ fn map_input_and_output_options(mut app_args: Vec<String>, working_dir: &Utf8Pat
     app_args
 }
 
-pub fn native_spec(app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
-    let app_args = app_args
-        .into_iter()
-        .map(|arg| shell_escape::escape(arg.into()).into())
-        .collect::<Vec<_>>();
+impl AppSpec for Ligandmpnn {
+    fn container_image(&self) -> &'static str {
+        "rosettacommons/ligandmpnn"
+    }
 
-    let mut app_args = map_input_and_output_options(app_args, working_dir);
+    fn pixi_recipe(&self) -> Option<&'static str> {
+        Some(include_asset!("pixi/ligandmpnn.toml"))
+    }
 
-    app_args.splice(
-        0..0,
-        [
-            "--checkpoint_protein_mpnn".into(),
-            "$LIGANDMPNN_WEIGHTS/proteinmpnn_v_48_020.pt".into(),
-        ],
-    );
+    fn container_spec(&self, app_args: Vec<String>) -> ContainerConfig {
+        ContainerConfig::with_prefixed_args(
+            [
+                "--out_folder=/w",
+                "--checkpoint_protein_mpnn",
+                "/app/ligandmpnn/model_params/proteinmpnn_v_48_020.pt",
+            ],
+            app_args,
+        )
+        .working_dir("/w")
 
-    NativeRunSpec::new(include_asset!("pixi/ligandmpnn.toml"), app_args)
+        // app_args.splice(
+        //     0..0,
+        //     [
+        //         "--out_folder=/w".into(),
+        //         "--checkpoint_protein_mpnn".into(),
+        //         "/app/ligandmpnn/model_params/proteinmpnn_v_48_020.pt".into(),
+        //     ],
+        // );
+        // RunSpec::new("rosettacommons/ligandmpnn", app_args).working_dir("/w")
+    }
+
+    fn native_spec(&self, app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
+        let app_args = app_args
+            .into_iter()
+            .map(|arg| shell_escape::escape(arg.into()).into())
+            .collect::<Vec<_>>();
+
+        let mut app_args = map_input_and_output_options(app_args, working_dir);
+
+        app_args.splice(
+            0..0,
+            [
+                "--checkpoint_protein_mpnn".into(),
+                "$LIGANDMPNN_WEIGHTS/proteinmpnn_v_48_020.pt".into(),
+            ],
+        );
+
+        NativeRunSpec::new(self.pixi_recipe().unwrap(), app_args)
+    }
 }

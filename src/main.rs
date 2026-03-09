@@ -1,9 +1,9 @@
 mod app;
+mod clean;
 mod executor;
 mod run;
+mod spec;
 mod util;
-
-use std::process;
 
 use anyhow::Result;
 use camino::Utf8PathBuf;
@@ -22,7 +22,7 @@ use crate::app::App;
 )]
 struct Args {
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Commands,
 
     /// Verbose mode
     #[arg(short, long, global = true)]
@@ -34,8 +34,14 @@ enum Commands {
     /// Clean an app installation
     Clean {
         /// The app to clean
-        #[arg(value_enum)]
-        app: App,
+        #[arg(value_enum, required_unless_present = "all", conflicts_with = "all")]
+        app: Option<App>,
+
+        #[arg(short, long, conflicts_with = "app")]
+        all: bool,
+
+        #[arg(short = 'e', long)]
+        container_engine: Option<run::ContainerEngine>,
     },
 
     /// Install an app
@@ -129,23 +135,24 @@ fn main() -> Result<()> {
         println!("Args: {:#?}", args);
     }
 
-    match &args.command {
-        Some(Commands::Clean { app }) => {
-            println!("Cleaning app: {}", app.red());
-            todo!();
+    match args.command {
+        Commands::Clean {
+            app,
+            all: _,
+            container_engine,
+        } => clean::clean(app, container_engine),
+
+        Commands::Install { app } => {
+            println!("Install app: {}", app.bright_green());
+            unimplemented!();
         }
-        Some(Commands::Install { app }) => {
-            println!("Cleaning app installation: {}", app.bright_green());
-            todo!();
-        }
-        Some(Commands::Run {
+        Commands::Run {
             app,
             args: app_args,
             container_engine,
             working_dir,
-        }) => {
+        } => {
             let working_dir = working_dir
-                .clone()
                 .unwrap_or_else(|| Utf8PathBuf::from("."))
                 .canonicalize()
                 .unwrap_or_else(|_| {
@@ -154,16 +161,14 @@ fn main() -> Result<()> {
             let working_dir = Utf8PathBuf::try_from(working_dir)
                 .unwrap_or_else(|_| panic!("{}", "Working dir path contains invalid UTF-8".red()));
 
-            run::run(app, app_args.clone(), container_engine, working_dir)
+            run::run(&app, app_args, &container_engine, working_dir)
         }
-        Some(Commands::Config { config_command: _ }) => {
+        Commands::Config { config_command: _ } => {
             todo!();
-        }
-
-        None => {
-            eprintln!("Error: No command specified");
-            eprintln!("Use --help to see available commands");
-            process::exit(1);
-        }
+        } // None => {
+          //     eprintln!("Error: No command specified");
+          //     eprintln!("Use --help to see available commands");
+          //     process::exit(1);
+          // }
     }
 }
