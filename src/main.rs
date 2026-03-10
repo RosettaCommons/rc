@@ -1,8 +1,7 @@
 mod app;
-mod clean;
-mod executor;
-mod run;
-mod spec;
+mod driver;
+mod engine;
+mod telemetry;
 mod util;
 
 use anyhow::Result;
@@ -10,7 +9,7 @@ use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use yansi::Paint;
 
-use crate::app::App;
+use crate::{app::App, engine::ContainerEngine};
 
 /// A command line tool to run various Rosetta applications
 #[derive(Parser, Debug)]
@@ -41,7 +40,7 @@ enum Commands {
         all: bool,
 
         #[arg(short = 'e', long)]
-        container_engine: Option<run::ContainerEngine>,
+        container_engine: Option<ContainerEngine>,
     },
 
     /// Install an app
@@ -66,7 +65,7 @@ enum Commands {
         working_dir: Option<Utf8PathBuf>,
 
         #[arg(short = 'e', long, default_value = "docker")]
-        container_engine: run::ContainerEngine,
+        container_engine: ContainerEngine,
     },
 
     Config {
@@ -140,7 +139,7 @@ fn main() -> Result<()> {
             app,
             all: _,
             container_engine,
-        } => clean::clean(app, container_engine),
+        } => driver::clean(app, container_engine),
 
         Commands::Install { app } => {
             println!("Install app: {}", app.bright_green());
@@ -161,7 +160,7 @@ fn main() -> Result<()> {
             let working_dir = Utf8PathBuf::try_from(working_dir)
                 .unwrap_or_else(|_| panic!("{}", "Working dir path contains invalid UTF-8".red()));
 
-            run::run(&app, app_args, &container_engine, working_dir)
+            driver::run(app.spec(), app_args, container_engine, working_dir)
         }
         Commands::Config { config_command: _ } => {
             todo!();

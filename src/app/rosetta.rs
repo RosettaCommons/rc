@@ -1,7 +1,7 @@
 use camino::Utf8Path;
 
 use crate::{
-    spec::{AppSpec, ContainerConfig, NativeRunSpec},
+    app::{AppSpec, ContainerConfig, NativeRunSpec},
     util::include_asset,
 };
 

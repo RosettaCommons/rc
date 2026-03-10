@@ -2,48 +2,48 @@ use std::fs;
 
 use anyhow::Result;
 use anyhow::anyhow;
+use camino::Utf8Path;
 use camino::Utf8PathBuf;
 use home::home_dir;
 use yansi::Paint;
 
-use crate::executor::Telemetry;
-use crate::run;
+use crate::app::AppSpec;
+use crate::engine::Engine;
+use crate::telemetry::Telemetry;
 use crate::util::Command;
 use crate::util::ensure_dir_signature;
-use crate::{executor::Executor, spec::NativeRunSpec};
 
-impl Executor {
-    pub(super) fn execute_native(&self, spec: NativeRunSpec) -> Result<()> {
-        assert!(matches!(self.engine, run::ContainerEngine::None));
+pub struct NativeEngine;
+pub static NATIVE: NativeEngine = NativeEngine;
+
+impl Engine for NativeEngine {
+    fn execute(&self, app: &dyn AppSpec, args: Vec<String>, working_dir: &Utf8Path) -> Result<()> {
+        let spec = app.native_spec(args, working_dir);
 
         let recipe = spec
             //.with_context(|| format!("Pixi recipe for app '{}' was not found", self.app))?
             .pixi;
 
-        Self::check_if_pixi_is_installed()?;
+        check_if_pixi_is_installed()?;
 
         //let pixi_evn_root = self.working_dir.join(format!("{}.pixi", self.app));
         let pixi_evn_root = Utf8PathBuf::from_path_buf(
             home_dir()
                 .unwrap()
-                .join(format!(".cache/rosettacommons/rc/native/{}", self.app)),
+                .join(format!(".cache/rosettacommons/rc/native/{}", app.name())),
         )
         .expect("path is not valid UTF-8");
 
-        ensure_dir_signature(
-            &pixi_evn_root,
-            &[self.app.to_string().as_ref(), recipe.as_ref()],
-            |d| {
-                std::fs::write(d.join("pixi.toml"), recipe.as_ref())?;
-                Command::new("pixi")
-                    .cd(d)
-                    .arg("run")
-                    .arg("setup")
-                    .live()
-                    .exec()?;
-                Ok(())
-            },
-        )?;
+        ensure_dir_signature(&pixi_evn_root, &[app.name(), recipe.as_ref()], |d| {
+            std::fs::write(d.join("pixi.toml"), recipe.as_ref())?;
+            Command::new("pixi")
+                .cd(d)
+                .arg("run")
+                .arg("setup")
+                .live()
+                .exec()?;
+            Ok(())
+        })?;
 
         let new_args = spec
             .args
@@ -62,7 +62,7 @@ impl Executor {
 
         let result = command.call();
 
-        let t = Telemetry::new(&self.working_dir);
+        let t = Telemetry::new(working_dir);
 
         let logs = format!(
             "{command}\nprocess success: {}\n{}\n{}\n{}\n",
@@ -95,16 +95,16 @@ impl Executor {
 
         Ok(())
     }
+}
 
-    /// Check if Pixi is installed, fail if not
-    fn check_if_pixi_is_installed() -> Result<()> {
-        match which::which("pixi") {
-            Ok(_) => Ok(()),
-            Err(_) => Err(anyhow!(
-                "Pixi is not installed or not in PATH, please run `{}` to install Pixi or visit {} for more information",
-                "curl -fsSL https://pixi.sh/install.sh | sh".green(),
-                "https://pixi.sh".bright_blue().underline()
-            )),
-        }
+/// Check if Pixi is installed, fail if not
+fn check_if_pixi_is_installed() -> Result<()> {
+    match which::which("pixi") {
+        Ok(_) => Ok(()),
+        Err(_) => Err(anyhow!(
+            "Pixi is not installed or not in PATH, please run `{}` to install Pixi or visit {} for more information",
+            "curl -fsSL https://pixi.sh/install.sh | sh".green(),
+            "https://pixi.sh".bright_blue().underline()
+        )),
     }
 }

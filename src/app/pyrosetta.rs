@@ -1,6 +1,6 @@
 use camino::Utf8Path;
 
-use crate::spec::{AppSpec, ContainerConfig, NativeRunSpec};
+use crate::app::{AppSpec, ContainerConfig, NativeRunSpec};
 
 pub struct Pyrosetta;
 pub static PYROSETTA: Pyrosetta = Pyrosetta;

@@ -2,7 +2,7 @@ use camino::Utf8Path;
 
 use crate::{
     app::rosetta,
-    spec::{AppSpec, ContainerConfig, NativeRunSpec},
+    app::{AppSpec, ContainerConfig, NativeRunSpec},
 };
 
 pub struct Score;

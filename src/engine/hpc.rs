@@ -1,38 +1,37 @@
 use std::fs;
 
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 
 use crate::{
-    executor::{Executor, Telemetry},
-    run,
-    spec::{ContainerConfig, MountRole},
+    app::{AppSpec, MountRole},
+    engine::Engine,
+    telemetry::Telemetry,
     util::{self, Command, dirs},
 };
 
 use anyhow::Result;
 use yansi::Paint;
 
-struct HpcContainerEngine(String);
+pub struct HpcEngine(pub &'static str);
 
-// cover HpcContainerEngine
-//hpc_container_engine @ HpcContainerEngine(engine): &HpcContainerEngine,
-//
-impl Executor {
-    pub(super) fn execute_with_hpc_container_engine(&self, spec: ContainerConfig) -> Result<()> {
-        assert!(matches!(
-            self.engine,
-            run::ContainerEngine::Singularity | run::ContainerEngine::Apptainer
-        ));
+pub static SINGULARITY: HpcEngine = HpcEngine("singularity");
+pub static APPTAINER: HpcEngine = HpcEngine("apptainer");
+
+impl Engine for HpcEngine {
+    fn execute(&self, app: &dyn AppSpec, args: Vec<String>, working_dir: &Utf8Path) -> Result<()> {
+        assert!(matches!(self.0, "singularity" | "apptainer"));
+
+        let spec = app.container_spec(args);
 
         //self.log_execute_info(&spec);
 
-        let engine = HpcContainerEngine(self.engine.to_string());
+        let engine = self.0;
 
-        let image_path = self.build_image(&engine, self.app.spec().container_image());
+        let image_path = build_image(self, app.container_image());
 
-        let mut options = format!("--bind {}:/w --pwd /w", self.working_dir);
+        let mut options = format!("--bind {}:/w --pwd /w", working_dir);
 
-        let t = Telemetry::new(&self.working_dir);
+        let t = Telemetry::new(working_dir);
 
         if let Some(scratch) = &spec.mounts.get(&MountRole::Scratch) {
             let d = t.scratch_dir();
@@ -41,13 +40,13 @@ impl Executor {
         }
 
         let command = if let Some(entrypoint) = &spec.entrypoint {
-            util::Command::new(engine.0)
+            util::Command::new(engine)
                 .arg("exec")
                 .args(options.split(' '))
                 .arg(image_path)
                 .arg(entrypoint)
         } else {
-            util::Command::new(engine.0)
+            util::Command::new(engine)
                 .arg("run")
                 .args(options.split(' '))
                 .arg(image_path)
@@ -91,32 +90,28 @@ impl Executor {
 
         Ok(())
     }
+}
 
-    fn build_image(
-        &self,
-        HpcContainerEngine(engine): &HpcContainerEngine,
-        image: &str,
-    ) -> Utf8PathBuf {
-        let image_path = Self::hpc_image_path(image);
-        if !image_path.exists() {
-            println!("Could not find {}, rebuilding...", image_path.green());
-            Command::new(engine)
-                .args(["pull", image_path.as_str(), &format!("docker://{}", image)])
-                .live()
-                .exec()
-                .expect("error building image");
-        }
-
-        image_path
+fn build_image(engine: &HpcEngine, image: &str) -> Utf8PathBuf {
+    let image_path = hpc_image_path(image);
+    if !image_path.exists() {
+        println!("Could not find {}, rebuilding...", image_path.green());
+        Command::new(engine.0)
+            .args(["pull", image_path.as_str(), &format!("docker://{}", image)])
+            .live()
+            .exec()
+            .expect("error building image");
     }
 
-    fn hpc_images_root() -> Utf8PathBuf {
-        let root = dirs::cache_root().join("hpc");
-        std::fs::create_dir_all(&root).unwrap();
-        root
-    }
+    image_path
+}
 
-    fn hpc_image_path(image_path: &str) -> Utf8PathBuf {
-        Self::hpc_images_root().join(format!("{}.sif", image_path.replace("/", "-")))
-    }
+fn hpc_images_root() -> Utf8PathBuf {
+    let root = dirs::cache_root().join("hpc");
+    std::fs::create_dir_all(&root).unwrap();
+    root
+}
+
+fn hpc_image_path(image_path: &str) -> Utf8PathBuf {
+    hpc_images_root().join(format!("{}.sif", image_path.replace("/", "-")))
 }
