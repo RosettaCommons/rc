@@ -1,28 +1,33 @@
 use std::fs;
 
 use anyhow::Result;
+use camino::Utf8Path;
 use yansi::Paint;
 
 use crate::{
-    app::{ContainerRunSpec, MountRole},
-    executor::{Executor, Telemetry},
-    run, util,
+    app::{AppSpec, MountRole},
+    engine::Engine,
+    telemetry::Telemetry,
+    util,
 };
 
-impl Executor {
-    pub(super) fn execute_with_docker(&self, spec: ContainerRunSpec) -> Result<()> {
-        assert!(matches!(self.engine, run::ContainerEngine::Docker));
+pub struct DockerEngine;
+pub static DOCKER: DockerEngine = DockerEngine;
+
+impl Engine for DockerEngine {
+    fn execute(&self, app: &dyn AppSpec, args: Vec<String>, working_dir: &Utf8Path) -> Result<()> {
+        let spec = app.container_spec(args);
 
         util::Command::shell(format!(
             "docker image inspect {0} >/dev/null 2>&1 || docker image pull {0}",
-            spec.image.0
+            app.container_image()
         ))
         .live()
         .exec()?;
 
         //self.log_execute_info(&spec);
 
-        let mut options = format!("--volume {}:/w --workdir /w", self.working_dir);
+        let mut options = format!("--volume {}:/w --workdir /w", working_dir);
 
         #[cfg(unix)]
         {
@@ -31,7 +36,7 @@ impl Executor {
             options.push_str(&format!(" --user {uid}:{gid}"));
         }
 
-        let t = Telemetry::new(&self.working_dir);
+        let t = Telemetry::new(working_dir);
 
         if let Some(scratch) = &spec.mounts.get(&MountRole::Scratch) {
             let d = t.scratch_dir();
@@ -46,7 +51,7 @@ impl Executor {
         let command = util::Command::new("docker")
             .arg("run")
             .args(options.split(' '))
-            .arg(&spec.image.0)
+            .arg(app.container_image())
             .args(spec.args.clone())
             // .message(format!(
             //     "Executing {} with arguments: {:?}",

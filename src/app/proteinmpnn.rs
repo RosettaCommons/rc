@@ -1,18 +1,12 @@
 use camino::{Utf8Path, Utf8PathBuf};
 
 use crate::{
-    app::{ContainerRunSpec, NativeRunSpec},
+    app::{AppSpec, ContainerConfig, NativeRunSpec},
     util::include_asset,
 };
 
-pub fn container_spec(app_args: Vec<String>) -> ContainerRunSpec {
-    ContainerRunSpec::with_prefixed_args(
-        "rosettacommons/proteinmpnn",
-        ["--out_folder=/w"],
-        app_args,
-    )
-    .working_dir("/w")
-}
+pub struct Proteinmpnn;
+pub static PROTEINMPNN: Proteinmpnn = Proteinmpnn;
 
 fn map_input_and_output_options(mut app_args: Vec<String>, working_dir: &Utf8Path) -> Vec<String> {
     const OPTIONS: [&str; 2] = ["--pdb_path", "--out_folder"];
@@ -47,15 +41,29 @@ fn map_input_and_output_options(mut app_args: Vec<String>, working_dir: &Utf8Pat
     app_args
 }
 
-pub fn native_spec(mut app_args: Vec<String>, working_dir: &Utf8Path) -> super::NativeRunSpec {
-    app_args.splice(0..0, ["python".into(), "protein_mpnn_run.py".into()]);
+impl AppSpec for Proteinmpnn {
+    fn container_image(&self) -> &'static str {
+        "rosettacommons/proteinmpnn"
+    }
 
-    let app_args = map_input_and_output_options(app_args, working_dir);
+    fn pixi_recipe(&self) -> Option<&'static str> {
+        Some(include_asset!("pixi/proteinmpnn.toml"))
+    }
 
-    let app_args = app_args
-        .into_iter()
-        .map(|arg| shell_escape::escape(arg.into()).into())
-        .collect::<Vec<_>>();
+    fn container_spec(&self, app_args: Vec<String>) -> ContainerConfig {
+        ContainerConfig::with_prefixed_args(["--out_folder=/w"], app_args).working_dir("/w")
+    }
 
-    NativeRunSpec::new(include_asset!("pixi/proteinmpnn.toml"), app_args)
+    fn native_spec(&self, mut app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
+        app_args.splice(0..0, ["python".into(), "protein_mpnn_run.py".into()]);
+
+        let app_args = map_input_and_output_options(app_args, working_dir);
+
+        let app_args = app_args
+            .into_iter()
+            .map(|arg| shell_escape::escape(arg.into()).into())
+            .collect::<Vec<_>>();
+
+        NativeRunSpec::new(self.pixi_recipe().unwrap(), app_args)
+    }
 }

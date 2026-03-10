@@ -8,12 +8,11 @@ mod rfdiffusion;
 mod rosetta;
 mod score;
 
-use std::{borrow::Cow, collections::HashMap};
-
 use camino::Utf8Path;
 use clap::ValueEnum;
+use std::{borrow::Cow, collections::HashMap};
 
-#[derive(ValueEnum, Clone, Copy, Debug, strum::Display)]
+#[derive(ValueEnum, Clone, Copy, Debug, strum::Display, strum::EnumIter)]
 #[clap(rename_all = "lowercase")]
 #[strum(serialize_all = "lowercase")] //  "kebab-case"
 pub enum App {
@@ -46,22 +45,27 @@ pub enum App {
     /// Run the Foundry command https://github.com/RosettaCommons/foundry
     #[value(aliases = ["Foundry"])]
     Foundry,
-
-    /// Run the PiCAP/CAPSIF2 command https://github.com/Graylab/picap
-    #[value(aliases = ["PiCAP", "CAPSIF2"])]
-    Picap,
+    // /// Run the PiCAP/CAPSIF2 command https://github.com/Graylab/picap
+    // #[value(aliases = ["PiCAP", "CAPSIF2"])]
+    // Picap,
 }
 
-pub struct Image(pub String);
-
-// enum IoLayout {
-//     Workdir(PathBuf),
-//     InputOutput { input: PathBuf, output: PathBuf },
-// }
-// struct ContainerMounts {
-//     io: IoLayout,
-//     scratch: Option<PathBuf>,
-// }
+impl App {
+    pub fn spec(self) -> &'static dyn AppSpec {
+        match self {
+            App::Score => &score::SCORE,
+            App::Rosetta => &rosetta::ROSETTA,
+            App::PyRosetta => &pyrosetta::PYROSETTA,
+            App::Rfdiffusion => &rfdiffusion::RFDIFFUSION,
+            App::Proteinmpnn => &proteinmpnn::PROTEINMPNN,
+            App::ProteinmpnnScript => &proteinmpnn_script::PROTEINMPNN_SCRIPT,
+            App::Ligandmpnn => &ligandmpnn::LIGANDMPNN,
+            App::Foundry => &foundry::FOUNDRY,
+            // App::Picap => &picap::PICAP,
+            //_ => panic!("unimplementet app"),
+        }
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MountRole {
@@ -69,32 +73,9 @@ pub enum MountRole {
     Scratch,
 }
 
-// enum InputControl {
-//     /// The package expects a file path via a CLI flag (e.g. "--input").
-//     FlagFile { flag: &'static str },
-//     // /// The package expects a directory path via a CLI flag (e.g. "--input-dir").
-//     // FlagDir { flag: &'static str },
-
-//     // /// The package reads inputs from a fixed directory (typically inside the container).
-//     // FixedDir { dir: PathBuf },
-
-//     // /// The package expects a file path via a CLI argument.
-//     // ArgFile { arg: String },
-// }
-// enum OutputControl {
-//     /// Package writes outputs using a prefix provided via CLI flag
-//     /// (e.g. "--out-prefix results/run1")
-//     FlagPrefix { flag: &'static str },
-//     // /// Package writes outputs into a directory provided via CLI flag
-//     // /// (e.g. "--out-dir /results")
-//     // FlagDir { flag: String },
-
-//     // /// Package writes outputs into a fixed directory
-//     // FixedDir { dir: PathBuf },
-// }
-
-pub struct ContainerRunSpec {
-    pub image: Image,
+// ContainerConfig or ContainerExecConfig
+pub struct ContainerConfig {
+    //pub image: Image,
     pub args: Vec<String>,
     pub mounts: HashMap<MountRole, String>,
     pub entrypoint: Option<String>,
@@ -105,17 +86,43 @@ pub struct NativeRunSpec {
     pub args: Vec<String>,
 }
 
-impl ContainerRunSpec {
-    pub fn new(image: impl Into<String>, args: Vec<String>) -> Self {
+pub trait AppSpec {
+    fn name(&self) -> &'static str {
+        std::any::type_name::<Self>().rsplit("::").next().unwrap()
+    }
+
+    /// Docker image name — also the source for Singularity/Apptainer .sif builds.
+    /// The only required method. Single source of truth for the container image.
+    fn container_image(&self) -> &'static str;
+
+    /// Pixi TOML recipe for native execution.
+    /// `None` (default) means this app does not support native execution.
+    fn pixi_recipe(&self) -> Option<&'static str> {
+        None
+    }
+
+    fn container_spec(&self, args: Vec<String>) -> ContainerConfig;
+    // {
+    //     ContainerRunSpec::new(self.container_image(), args).working_dir("/w")
+    // }
+
+    fn native_spec(&self, args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec;
+}
+
+impl ContainerConfig {
+    pub fn new(
+        // image: impl Into<String>,
+        args: Vec<String>,
+    ) -> Self {
         Self {
-            image: Image(image.into()),
+            //image: Image(image.into()),
             args,
             mounts: HashMap::new(),
             entrypoint: None,
         }
     }
     pub fn with_prefixed_args<I1, I2, S1, S2>(
-        image: impl Into<String>,
+        // image: impl Into<String>,
         prefixes: I1,
         args: I2,
     ) -> Self
@@ -132,7 +139,7 @@ impl ContainerRunSpec {
             .collect();
 
         Self {
-            image: Image(image.into()),
+            // image: Image(image.into()),
             args: full_args,
             mounts: HashMap::new(),
             entrypoint: None,
@@ -172,61 +179,6 @@ impl NativeRunSpec {
 //     }
 // }
 
-impl App {
-    pub fn container_spec(self, app_args: Vec<String>) -> ContainerRunSpec {
-        match self {
-            App::Score => score::container_spec(app_args),
-            App::Rosetta => rosetta::container_spec(app_args),
-            App::PyRosetta => pyrosetta::container_spec(app_args),
-            App::Rfdiffusion => rfdiffusion::container_spec(app_args),
-            App::Proteinmpnn => proteinmpnn::container_spec(app_args),
-            App::ProteinmpnnScript => proteinmpnn_script::container_spec(app_args),
-            App::Ligandmpnn => ligandmpnn::container_spec(app_args),
-            App::Foundry => foundry::container_spec(app_args),
-            App::Picap => picap::container_spec(app_args),
-        }
-    }
-
-    pub fn native_spec(self, app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
-        match self {
-            App::Score => score::native_spec(app_args, working_dir),
-            App::Rosetta => rosetta::native_spec(app_args, working_dir),
-            App::PyRosetta => todo!("not implemented"), // pyrosetta::native_spec(app_args),
-            App::Rfdiffusion => rfdiffusion::native_spec(app_args, working_dir),
-            App::Proteinmpnn => proteinmpnn::native_spec(app_args, working_dir),
-            App::ProteinmpnnScript => proteinmpnn_script::native_spec(app_args, working_dir),
-            App::Ligandmpnn => ligandmpnn::native_spec(app_args, working_dir),
-            App::Foundry => foundry::native_spec(app_args, working_dir),
-            App::Picap => todo!("not implemented"), // picap::native_spec(app_args),
-        }
-    }
-}
-
-// /// Dispatches a method call to the appropriate app module.
-// /// Each App variant calls module::method(args) with the same name.
-// macro_rules! dispatch_spec {
-//     ($method:ident, $self:expr, $args:expr) => {
-//         match $self {
-//             App::Score => score::$method($args),
-//             App::Rosetta => rosetta::$method($args),
-//             App::PyRosetta => pyrosetta::$method($args),
-//             App::Rfdiffusion => rfdiffusion::$method($args),
-//             App::Proteinmpnn => proteinmpnn::$method($args),
-//             App::ProteinmpnnScript => proteinmpnn_script::$method($args),
-//             App::Ligandmpnn => ligandmpnn::$method($args),
-//             App::Picap => picap::$method($args),
-//         }
-//     };
-// }
-// impl App {
-//     pub fn container_spec(self, app_args: Vec<String>) -> ContainerRunSpec {
-//         dispatch_spec!(container_spec, self, app_args)
-//     }
-//     pub fn native_spec(self, app_args: Vec<String>) -> Option<NativeRunSpec> {
-//         dispatch_spec!(native_spec, self, app_args)
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -236,13 +188,8 @@ mod tests {
         let prefixes = vec!["--prefix1", "--prefix2"];
         let args = vec!["arg1", "arg2", "arg3"];
 
-        let spec = ContainerRunSpec::with_prefixed_args(
-            "test/image:latest",
-            prefixes.clone(),
-            args.clone(),
-        );
+        let spec = ContainerConfig::with_prefixed_args(prefixes.clone(), args.clone());
 
-        assert_eq!(spec.image.0, "test/image:latest");
         assert_eq!(
             spec.args,
             vec!["--prefix1", "--prefix2", "arg1", "arg2", "arg3"]
@@ -255,9 +202,8 @@ mod tests {
         let prefixes: Vec<String> = vec![];
         let args = vec!["arg1".to_string(), "arg2".to_string()];
 
-        let spec = ContainerRunSpec::with_prefixed_args("test/image:v1", prefixes, args.clone());
+        let spec = ContainerConfig::with_prefixed_args(prefixes, args.clone());
 
-        assert_eq!(spec.image.0, "test/image:v1");
         assert_eq!(spec.args, vec!["arg1", "arg2"]);
     }
 
@@ -266,9 +212,8 @@ mod tests {
         let prefixes = vec!["--flag".to_string()];
         let args: Vec<String> = vec![];
 
-        let spec = ContainerRunSpec::with_prefixed_args("test/image", prefixes.clone(), args);
+        let spec = ContainerConfig::with_prefixed_args(prefixes.clone(), args);
 
-        assert_eq!(spec.image.0, "test/image");
         assert_eq!(spec.args.len(), 1);
         assert_eq!(spec.args[0], "--flag");
     }
@@ -278,9 +223,8 @@ mod tests {
         let prefixes: Vec<String> = vec![];
         let args: Vec<String> = vec![];
 
-        let spec = ContainerRunSpec::with_prefixed_args("empty/image", prefixes, args);
+        let spec = ContainerConfig::with_prefixed_args(prefixes, args);
 
-        assert_eq!(spec.image.0, "empty/image");
         assert_eq!(spec.args.len(), 0);
         assert!(spec.mounts.is_empty());
     }

@@ -1,9 +1,12 @@
 use camino::{Utf8Path, Utf8PathBuf};
 
 use crate::{
-    app::{ContainerRunSpec, NativeRunSpec},
+    app::{AppSpec, ContainerConfig, NativeRunSpec},
     util::include_asset,
 };
+
+pub struct ProteinmpnnScript;
+pub static PROTEINMPNN_SCRIPT: ProteinmpnnScript = ProteinmpnnScript;
 
 fn map_input_and_output_options(mut app_args: Vec<String>, working_dir: &Utf8Path) -> Vec<String> {
     const OPTIONS: [&str; 2] = ["--input_path=", "--output_path="];
@@ -39,50 +42,60 @@ const SCRIPTS_WITH_INPUT_PATH_OPTION: &[&str] = &[
     "parse_multiple_chains.py",
 ];
 
-pub fn container_spec(app_args: Vec<String>) -> ContainerRunSpec {
-    assert!(
-        !(app_args.is_empty() || app_args[0].starts_with("-")),
-        "ProteinmpnnScript arguments must include a script name as first argument"
-    );
+impl AppSpec for ProteinmpnnScript {
+    fn container_image(&self) -> &'static str {
+        "rosettacommons/proteinmpnn"
+    }
 
-    let script_have_input_path_option =
-        !SCRIPTS_WITH_INPUT_PATH_OPTION.contains(&app_args[0].as_str());
+    fn pixi_recipe(&self) -> Option<&'static str> {
+        Some(include_asset!("pixi/proteinmpnn.toml"))
+    }
 
-    let mut app_args = if script_have_input_path_option {
-        map_input_and_output_options(app_args, "/w".into())
-    } else {
-        app_args
-    };
+    fn container_spec(&self, app_args: Vec<String>) -> ContainerConfig {
+        assert!(
+            !(app_args.is_empty() || app_args[0].starts_with("-")),
+            "ProteinmpnnScript arguments must include a script name as first argument"
+        );
 
-    app_args[0].insert_str(0, "/app/proteinmpnn/helper_scripts/");
+        let script_have_input_path_option =
+            !SCRIPTS_WITH_INPUT_PATH_OPTION.contains(&app_args[0].as_str());
 
-    ContainerRunSpec::new("rosettacommons/proteinmpnn", app_args)
-        .working_dir("/w")
-        .entrypoint("/app/proteinmpnn/.venv/bin/python")
-}
+        let mut app_args = if script_have_input_path_option {
+            map_input_and_output_options(app_args, "/w".into())
+        } else {
+            app_args
+        };
 
-pub fn native_spec(mut app_args: Vec<String>, working_dir: &Utf8Path) -> super::NativeRunSpec {
-    assert!(
-        !(app_args.is_empty() || app_args[0].starts_with("-")),
-        "ProteinmpnnScript arguments must include a script name as first argument"
-    );
+        app_args[0].insert_str(0, "/app/proteinmpnn/helper_scripts/");
 
-    app_args.insert(0, "python".into());
-    app_args[1].insert_str(0, "helper_scripts/");
+        ContainerConfig::new(app_args)
+            .working_dir("/w")
+            .entrypoint("/app/proteinmpnn/.venv/bin/python")
+    }
 
-    let script_have_input_path_option =
-        !SCRIPTS_WITH_INPUT_PATH_OPTION.contains(&app_args[0].as_str());
+    fn native_spec(&self, mut app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
+        assert!(
+            !(app_args.is_empty() || app_args[0].starts_with("-")),
+            "ProteinmpnnScript arguments must include a script name as first argument"
+        );
 
-    let app_args = if script_have_input_path_option {
-        map_input_and_output_options(app_args, working_dir)
-    } else {
-        app_args
-    };
+        app_args.insert(0, "python".into());
+        app_args[1].insert_str(0, "helper_scripts/");
 
-    let app_args = app_args
-        .into_iter()
-        .map(|arg| shell_escape::escape(arg.into()).into())
-        .collect::<Vec<_>>();
+        let script_have_input_path_option =
+            !SCRIPTS_WITH_INPUT_PATH_OPTION.contains(&app_args[0].as_str());
 
-    NativeRunSpec::new(include_asset!("pixi/proteinmpnn.toml"), app_args)
+        let app_args = if script_have_input_path_option {
+            map_input_and_output_options(app_args, working_dir)
+        } else {
+            app_args
+        };
+
+        let app_args = app_args
+            .into_iter()
+            .map(|arg| shell_escape::escape(arg.into()).into())
+            .collect::<Vec<_>>();
+
+        NativeRunSpec::new(self.pixi_recipe().unwrap(), app_args)
+    }
 }
