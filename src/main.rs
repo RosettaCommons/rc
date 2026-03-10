@@ -137,14 +137,21 @@ fn main() -> Result<()> {
     match args.command {
         Commands::Clean {
             app,
-            all: _,
+            all,
             container_engine,
-        } => driver::clean(app, container_engine),
+        } => {
+            if all {
+                driver::clean_all()
+            } else {
+                driver::clean(app, container_engine)
+            }
+        }
 
         Commands::Install { app } => {
             println!("Install app: {}", app.bright_green());
             unimplemented!();
         }
+
         Commands::Run {
             app,
             args: app_args,

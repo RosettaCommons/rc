@@ -160,10 +160,10 @@ rc install <APP>
 
 ### `clean`
 
-Clean an app installation (not yet implemented).
+Remove all pre-built HPC images and native-installs.
 
 ```bash
-rc clean <APP>
+rc clean --all
 ```
 
 ## App Usage Examples

@@ -1,9 +1,15 @@
+use std::fs;
+
 use anyhow::Result;
 use camino::Utf8PathBuf;
 use strum::IntoEnumIterator;
 use yansi::Paint;
 
-use crate::{app::App, app::AppSpec, engine::ContainerEngine};
+use crate::{
+    app::{App, AppSpec},
+    engine::ContainerEngine,
+    util::dirs::cache_root,
+};
 
 // pub struct Executor {
 //     app: App,
@@ -92,5 +98,12 @@ pub fn clean(app: Option<App>, container_engine: Option<ContainerEngine>) -> Res
         }
     }
 
+    Ok(())
+}
+
+pub fn clean_all() -> Result<()> {
+    let cache_root = cache_root();
+    println!("Cleaning up cache dir {:?}...", cache_root.bright().red());
+    fs::remove_dir_all(cache_root)?;
     Ok(())
 }
