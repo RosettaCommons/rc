@@ -8,7 +8,9 @@ mod rfdiffusion;
 mod rosetta;
 mod score;
 
+use camino::Utf8Path;
 use clap::ValueEnum;
+use std::{borrow::Cow, collections::HashMap};
 
 #[derive(ValueEnum, Clone, Copy, Debug, strum::Display, strum::EnumIter)]
 #[clap(rename_all = "lowercase")]
@@ -64,10 +66,6 @@ impl App {
         }
     }
 }
-
-use std::{borrow::Cow, collections::HashMap};
-
-use camino::Utf8Path;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MountRole {
