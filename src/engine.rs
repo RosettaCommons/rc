@@ -8,7 +8,7 @@ use clap::ValueEnum;
 
 use crate::app::AppSpec;
 
-#[derive(ValueEnum, Clone, Copy, Debug, strum::Display, strum::EnumIter)]
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq, strum::Display, strum::EnumIter)]
 #[strum(serialize_all = "lowercase")] //  "kebab-case"
 pub enum ContainerEngine {
     Docker,
@@ -19,8 +19,8 @@ pub enum ContainerEngine {
 
 pub trait Engine {
     fn execute(&self, app: &dyn AppSpec, args: Vec<String>, working_dir: &Utf8Path) -> Result<()>;
-    // fn install(&self, app: &dyn AppSpec) -> Result<()>;
-    // fn clean(&self, app: &dyn AppSpec) -> Result<()>;
+    fn install(&self, app: &dyn AppSpec) -> Result<()>;
+    fn clean(&self, app: &dyn AppSpec) -> Result<()>;
 }
 
 impl ContainerEngine {

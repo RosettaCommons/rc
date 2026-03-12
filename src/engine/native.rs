@@ -4,13 +4,13 @@ use anyhow::Result;
 use anyhow::anyhow;
 use camino::Utf8Path;
 use camino::Utf8PathBuf;
-use home::home_dir;
 use yansi::Paint;
 
 use crate::app::AppSpec;
 use crate::engine::Engine;
 use crate::telemetry::Telemetry;
 use crate::util::Command;
+use crate::util::dirs::cache_root;
 use crate::util::ensure_dir_signature;
 
 pub struct NativeEngine;
@@ -20,30 +20,7 @@ impl Engine for NativeEngine {
     fn execute(&self, app: &dyn AppSpec, args: Vec<String>, working_dir: &Utf8Path) -> Result<()> {
         let spec = app.native_spec(args, working_dir);
 
-        let recipe = spec
-            //.with_context(|| format!("Pixi recipe for app '{}' was not found", self.app))?
-            .pixi;
-
-        check_if_pixi_is_installed()?;
-
-        //let pixi_evn_root = self.working_dir.join(format!("{}.pixi", self.app));
-        let pixi_evn_root = Utf8PathBuf::from_path_buf(
-            home_dir()
-                .unwrap()
-                .join(format!(".cache/rosettacommons/rc/native/{}", app.name())),
-        )
-        .expect("path is not valid UTF-8");
-
-        ensure_dir_signature(&pixi_evn_root, &[app.name(), recipe.as_ref()], |d| {
-            std::fs::write(d.join("pixi.toml"), recipe.as_ref())?;
-            Command::new("pixi")
-                .cd(d)
-                .arg("run")
-                .arg("setup")
-                .live()
-                .exec()?;
-            Ok(())
-        })?;
+        let pixi_evn_root = build_pixi_env(app)?;
 
         let new_args = spec
             .args
@@ -95,6 +72,47 @@ impl Engine for NativeEngine {
 
         Ok(())
     }
+
+    fn install(&self, app: &dyn AppSpec) -> Result<()> {
+        build_pixi_env(app)?;
+        Ok(())
+    }
+
+    fn clean(&self, app: &dyn AppSpec) -> Result<()> {
+        let pixi_evn_root = pixi_evn_root(app);
+
+        if pixi_evn_root.exists() {
+            fs::remove_dir_all(&pixi_evn_root)?;
+        }
+
+        Ok(())
+    }
+}
+
+fn build_pixi_env(app: &dyn AppSpec) -> Result<Utf8PathBuf, anyhow::Error> {
+    let pixi_recipe = app
+        .pixi_recipe()
+        .unwrap_or_else(|| unimplemented!("Native run for {} is not supported", app.name().red()));
+
+    check_if_pixi_is_installed()?;
+
+    let pixi_evn_root = pixi_evn_root(app);
+
+    ensure_dir_signature(&pixi_evn_root, &[app.name(), pixi_recipe], |d| {
+        std::fs::write(d.join("pixi.toml"), pixi_recipe)?;
+        Command::new("pixi")
+            .cd(d)
+            .arg("run")
+            .arg("setup")
+            .live()
+            .exec()?;
+        Ok(())
+    })?;
+    Ok(pixi_evn_root)
+}
+
+fn pixi_evn_root(app: &dyn AppSpec) -> Utf8PathBuf {
+    cache_root().join(format!("native/{}", app.name()))
 }
 
 /// Check if Pixi is installed, fail if not

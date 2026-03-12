@@ -23,8 +23,6 @@ impl Engine for HpcEngine {
 
         let spec = app.container_spec(args);
 
-        //self.log_execute_info(&spec);
-
         let engine = self.0;
 
         let image_path = build_image(self, app.container_image());
@@ -87,6 +85,22 @@ impl Engine for HpcEngine {
             .blue()
             .dim()
         );
+
+        Ok(())
+    }
+
+    fn install(&self, app: &dyn AppSpec) -> Result<()> {
+        build_image(self, app.container_image());
+        Ok(())
+    }
+
+    fn clean(&self, app: &dyn AppSpec) -> Result<()> {
+        let image_path = hpc_image_path(app.container_image());
+        if image_path.exists() {
+            fs::remove_file(&image_path)?;
+        } else {
+            // println!("No image found at {:?}, nothing to clean.", image_path);
+        }
 
         Ok(())
     }

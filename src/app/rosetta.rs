@@ -23,6 +23,6 @@ impl AppSpec for Rosetta {
 
     fn native_spec(&self, mut app_args: Vec<String>, working_dir: &Utf8Path) -> NativeRunSpec {
         app_args.insert(0, format!("cd {working_dir} &&"));
-        NativeRunSpec::new(self.pixi_recipe().unwrap(), app_args)
+        NativeRunSpec::new(app_args)
     }
 }

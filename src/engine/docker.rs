@@ -8,7 +8,7 @@ use crate::{
     app::{AppSpec, MountRole},
     engine::Engine,
     telemetry::Telemetry,
-    util,
+    util::{self},
 };
 
 pub struct DockerEngine;
@@ -18,16 +18,9 @@ impl Engine for DockerEngine {
     fn execute(&self, app: &dyn AppSpec, args: Vec<String>, working_dir: &Utf8Path) -> Result<()> {
         let spec = app.container_spec(args);
 
-        util::Command::shell(format!(
-            "docker image inspect {0} >/dev/null 2>&1 || docker image pull {0}",
-            app.container_image()
-        ))
-        .live()
-        .exec()?;
+        self.install(app)?;
 
-        //self.log_execute_info(&spec);
-
-        let mut options = format!("--volume {}:/w --workdir /w", working_dir);
+        let mut options = format!("--rm --volume {}:/w --workdir /w", working_dir);
 
         #[cfg(unix)]
         {
@@ -102,6 +95,27 @@ impl Engine for DockerEngine {
             .dim()
         );
 
+        Ok(())
+    }
+
+    fn install(&self, app: &dyn AppSpec) -> Result<()> {
+        util::Command::shell(format!(
+            "docker image inspect {0} >/dev/null 2>&1 || docker image pull {0}",
+            app.container_image()
+        ))
+        .live()
+        .exec()?;
+        Ok(())
+    }
+
+    fn clean(&self, app: &dyn AppSpec) -> Result<()> {
+        util::Command::new("docker")
+            .arg("image")
+            .arg("rm")
+            .arg("-f")
+            .arg(app.container_image())
+            .live()
+            .exec()?;
         Ok(())
     }
 }

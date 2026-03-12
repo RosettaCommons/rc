@@ -10,7 +10,7 @@ mod score;
 
 use camino::Utf8Path;
 use clap::ValueEnum;
-use std::{borrow::Cow, collections::HashMap};
+use std::collections::HashMap;
 
 #[derive(ValueEnum, Clone, Copy, Debug, strum::Display, strum::EnumIter)]
 #[clap(rename_all = "lowercase")]
@@ -51,7 +51,7 @@ pub enum App {
 }
 
 impl App {
-    pub fn spec(self) -> &'static dyn AppSpec {
+    pub fn spec(&self) -> &'static dyn AppSpec {
         match self {
             App::Score => &score::SCORE,
             App::Rosetta => &rosetta::ROSETTA,
@@ -82,7 +82,7 @@ pub struct ContainerConfig {
 }
 
 pub struct NativeRunSpec {
-    pub pixi: Cow<'static, str>,
+    //pub pixi: Cow<'static, str>,
     pub args: Vec<String>,
 }
 
@@ -161,11 +161,8 @@ impl ContainerConfig {
 }
 
 impl NativeRunSpec {
-    pub fn new(pixi: impl Into<Cow<'static, str>>, args: Vec<String>) -> Self {
-        Self {
-            pixi: pixi.into(),
-            args,
-        }
+    pub fn new(args: Vec<String>) -> Self {
+        Self { args }
     }
     // pub fn pixi(mut self, p: impl Into<Cow<'static, str>>) -> Self {
     //     self.pixi = p.into();

@@ -64,6 +64,6 @@ impl AppSpec for Proteinmpnn {
             .map(|arg| shell_escape::escape(arg.into()).into())
             .collect::<Vec<_>>();
 
-        NativeRunSpec::new(self.pixi_recipe().unwrap(), app_args)
+        NativeRunSpec::new(app_args)
     }
 }

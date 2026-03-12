@@ -9,7 +9,7 @@ use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use yansi::Paint;
 
-use crate::{app::App, engine::ContainerEngine};
+use crate::{app::App, driver::install, engine::ContainerEngine};
 
 /// A command line tool to run various Rosetta applications
 #[derive(Parser, Debug)]
@@ -39,7 +39,7 @@ enum Commands {
         #[arg(short, long, conflicts_with = "app")]
         all: bool,
 
-        #[arg(short = 'e', long)]
+        #[arg(short = 'e', long, conflicts_with = "all")]
         container_engine: Option<ContainerEngine>,
     },
 
@@ -48,6 +48,9 @@ enum Commands {
         /// The app to install
         #[arg(value_enum)]
         app: App,
+
+        #[arg(short = 'e', long)]
+        container_engine: ContainerEngine,
     },
 
     /// Run an app with optional arguments
@@ -137,20 +140,14 @@ fn main() -> Result<()> {
     match args.command {
         Commands::Clean {
             app,
-            all,
+            all: _,
             container_engine,
-        } => {
-            if all {
-                driver::clean_all()
-            } else {
-                driver::clean(app, container_engine)
-            }
-        }
+        } => driver::clean(app, container_engine),
 
-        Commands::Install { app } => {
-            println!("Install app: {}", app.bright_green());
-            unimplemented!();
-        }
+        Commands::Install {
+            app,
+            container_engine,
+        } => install(app, container_engine),
 
         Commands::Run {
             app,

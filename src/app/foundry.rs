@@ -135,6 +135,6 @@ impl AppSpec for Foundry {
         // }
         // app_args.insert(0, format!("cd {} && ", working_dir.to_string_lossy()));
 
-        NativeRunSpec::new(self.pixi_recipe().unwrap(), app_args)
+        NativeRunSpec::new(app_args)
     }
 }

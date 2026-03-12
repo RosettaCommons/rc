@@ -88,6 +88,6 @@ impl AppSpec for Ligandmpnn {
             ],
         );
 
-        NativeRunSpec::new(self.pixi_recipe().unwrap(), app_args)
+        NativeRunSpec::new(app_args)
     }
 }
