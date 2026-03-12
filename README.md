@@ -1,6 +1,6 @@
 # RosettaCommons Run
 
-RosettaCommons Run utility (`rc`) is a command-line tool for running and reproducing calculations with containerized biomolecular software. It simplifies everything from mounting local directories to logging executed commands, helping you run complex workflows reliably and repeatably. Designed for reproducible research, `rc` aims to become a seamless part of your daily computational workflow.
+RosettaCommons Run utility (`rc`) is a command-line tool for running and reproducing calculations with containerized biomolecular software. It simplifies common tasks such as mounting local directories, building HPC containers, running containerized applications, and logging executed commands, helping you run complex workflows reliably and repeatably. Designed for reproducible research, `rc` aims to become a seamless part of your daily computational workflow.
 
 ## Table of Contents
 
