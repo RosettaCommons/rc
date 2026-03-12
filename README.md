@@ -29,7 +29,7 @@ RosettaCommons Run utility (`rc`) is a command-line tool for running and reprodu
 
 ## Overview
 
-`rc` provides a unified interface for running Rosetta and other biomolecular modeling applications through container engines like Docker, Singularity, or Apptainer.
+`rc` provides a unified interface for running Rosetta and other biomolecular modeling applications through container engines like Docker, Singularity, or Apptainer — or natively without containers using [Pixi](https://pixi.sh)-managed environments.
 
 **Available Apps:**
 - [`rosetta`](https://docs.rosettacommons.org/docs/latest/Home) - Run Rosetta protocols and applications
