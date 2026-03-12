@@ -152,17 +152,70 @@ The `[OPTIONS]` are `rc`-specific, while the `[ARGS]` are specific to the app yo
 
 ### `install`
 
-Install an application (not yet implemented).
+Pre-install (pull or build) the container image or native environment for an app. The `-e` flag is required.
 
 ```bash
-rc install <APP>
+rc install <APP> -e <ENGINE>
+```
+
+**Options:**
+- `-e, --container-engine <ENGINE>` - Container engine to install for (**required**)
+
+**What it does per engine:**
+- **`docker`** - Pulls the app's Docker image if not already present locally
+- **`singularity` / `apptainer`** - Pre-builds the `.sif` image file into the local cache
+- **`none`** (native) - Installs the [Pixi](https://pixi.sh) environment for the app
+
+**Examples:**
+
+```bash
+# Pull the Docker image for RFdiffusion
+rc install rfdiffusion -e docker
+
+# Pre-build the Singularity image for Rosetta
+rc install rosetta -e singularity
+
+# Set up the native Pixi environment for RFdiffusion
+rc install rfdiffusion -e none
 ```
 
 ### `clean`
 
-Remove all pre-built HPC images and native-installs.
+Remove cached images and native environments for one app or all apps.
 
 ```bash
+# Clean a specific app across all engines
+rc clean <APP>
+
+# Clean a specific app for one engine
+rc clean <APP> -e <ENGINE>
+
+# Clean all apps across all engines
+rc clean --all
+```
+
+**Arguments:**
+- `<APP>` - The app to clean (required unless `--all` is specified)
+
+**Options:**
+- `-a, --all` - Clean all apps (cannot be combined with `<APP>` or `-e`)
+- `-e, --container-engine <ENGINE>` - Limit cleaning to a specific engine (cannot be combined with `--all`)
+
+**What it does per engine:**
+- **`docker`** - Removes the app's Docker image (`docker image rm`)
+- **`singularity` / `apptainer`** - Deletes the pre-built `.sif` image file from the cache
+- **`none`** (native) - Removes the app's Pixi environment directory from the cache
+
+**Examples:**
+
+```bash
+# Remove the Docker image for ProteinMPNN
+rc clean proteinmpnn -e docker
+
+# Remove all cached Singularity images
+rc clean --all -e singularity
+
+# Remove everything cached for all apps across all engines
 rc clean --all
 ```
 
