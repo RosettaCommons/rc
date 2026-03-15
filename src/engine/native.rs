@@ -51,12 +51,13 @@ impl Engine for NativeEngine {
         if !result.success {
             eprintln!(
                 "{}",
-                "Container {engine} exited with non-zero status"
+                format!("Native run for {} exited with non-zero status", app.name())
                     .bright_red()
                     .bold()
             );
             return Err(anyhow::anyhow!(
-                "Docker container exited with non-zero status"
+                "Native run for {} exited with non-zero status",
+                app.name()
             ));
         }
 

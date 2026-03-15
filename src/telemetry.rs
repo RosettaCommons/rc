@@ -14,7 +14,7 @@ impl Telemetry {
 
             let r = Telemetry {
                 working_dir: working_dir.to_path_buf(),
-                prefix: prefix.to_string(),
+                prefix,
             };
 
             if r.log_file_name().exists() || r.scratch_dir().exists() {

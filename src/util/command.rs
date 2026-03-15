@@ -1,5 +1,4 @@
 use std::path::Path;
-use std::sync::mpsc::Sender;
 use std::{
     fmt::{self},
     io::{Read, Write},
@@ -139,12 +138,12 @@ impl Command {
                 .spawn()
                 .unwrap_or_else(|_| panic!("Command: {} failed to start", self.command.red()));
 
-            let child_stdout_tx = child.stdout.take().expect("Failed to capture stdout");
-            let child_stderr_tx = child.stderr.take().expect("Failed to capture stderr");
+            let child_stdout = child.stdout.take().expect("Failed to capture stdout");
+            let child_stderr = child.stderr.take().expect("Failed to capture stderr");
 
             thread::scope(|s| {
-                let stdout_h = s.spawn(|| Self::pipe_to_sink(child_stdout_tx, std::io::stdout()));
-                let stderr_h = s.spawn(|| Self::pipe_to_sink(child_stderr_tx, std::io::stderr()));
+                let stdout_h = s.spawn(|| Self::pipe_to_sink(child_stdout, std::io::stdout()));
+                let stderr_h = s.spawn(|| Self::pipe_to_sink(child_stderr, std::io::stderr()));
 
                 let status = child.wait().expect("Failed to wait on child process");
 

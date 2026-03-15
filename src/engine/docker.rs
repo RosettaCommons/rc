@@ -20,51 +20,36 @@ impl Engine for DockerEngine {
 
         self.install(app)?;
 
-        let mut options = format!("--rm --volume {}:/w --workdir /w", working_dir);
+        let t = Telemetry::new(working_dir);
+
+        let mut cmd = util::Command::new("docker")
+            .arg("run")
+            .arg("--rm")
+            .arg("--volume")
+            .arg(format!("{working_dir}:/w"))
+            .arg("--workdir")
+            .arg("/w");
 
         #[cfg(unix)]
         {
             let uid = nix::unistd::getuid().as_raw();
             let gid = nix::unistd::getgid().as_raw();
-            options.push_str(&format!(" --user {uid}:{gid}"));
+            cmd = cmd.arg("--user").arg(format!("{uid}:{gid}"));
         }
 
-        let t = Telemetry::new(working_dir);
-
-        if let Some(scratch) = &spec.mounts.get(&MountRole::Scratch) {
+        if let Some(scratch) = spec.mounts.get(&MountRole::Scratch) {
             let d = t.scratch_dir();
-            options.push_str(&format!(" --volume {d}:/{scratch}"));
             fs::create_dir_all(&d)?;
+            cmd = cmd.arg("--volume").arg(format!("{d}:/{scratch}"));
         }
 
         if let Some(entrypoint) = &spec.entrypoint {
-            options.push_str(&format!(" --entrypoint {entrypoint}"));
+            cmd = cmd.arg("--entrypoint").arg(entrypoint.as_str());
         }
 
-        let command = util::Command::new("docker")
-            .arg("run")
-            .args(options.split(' '))
-            .arg(app.container_image())
-            .args(spec.args.clone())
-            // .message(format!(
-            //     "Executing {} with arguments: {:?}",
-            //     self.app, spec.args
-            // ))
-            .live();
+        let command = cmd.arg(app.container_image()).args(spec.args).live();
 
-        //let result = command.live().call();
         let result = command.call();
-
-        // let command_line = format!(
-        //     "docker run {options} {} {}",
-        //     self.image.0,
-        //     self.args.join(" ")
-        // );
-        // println!("Running {command_line}");
-        // let result = util::Command::shell(&command_line).try_call();
-
-        //println!("{}", result.stdout.bright_black());
-        //eprintln!("{}", result.stderr.bright_red());
 
         let logs = format!(
             "{command}\nprocess success: {}\n{}\n{}\n{}\n",

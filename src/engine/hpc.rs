@@ -19,7 +19,7 @@ pub static APPTAINER: HpcEngine = HpcEngine("apptainer");
 
 impl Engine for HpcEngine {
     fn execute(&self, app: &dyn AppSpec, args: Vec<String>, working_dir: &Utf8Path) -> Result<()> {
-        assert!(matches!(self.0, "singularity" | "apptainer"));
+        // assert!(matches!(self.0, "singularity" | "apptainer"));
 
         let spec = app.container_spec(args);
 
@@ -27,35 +27,36 @@ impl Engine for HpcEngine {
 
         let image_path = build_image(self, app.container_image());
 
-        let mut options = format!("--bind {}:/w --pwd /w", working_dir);
-
         let t = Telemetry::new(working_dir);
 
-        if let Some(scratch) = &spec.mounts.get(&MountRole::Scratch) {
+        let verb = if spec.entrypoint.is_some() {
+            "exec"
+        } else {
+            "run"
+        };
+
+        let mut cmd = util::Command::new(engine)
+            .arg(verb)
+            .arg("--bind")
+            .arg(format!("{working_dir}:/w"))
+            .arg("--pwd")
+            .arg("/w");
+
+        if let Some(scratch) = spec.mounts.get(&MountRole::Scratch) {
             let d = t.scratch_dir();
-            options.push_str(&format!(" --bind {d}:/{scratch}"));
             fs::create_dir_all(&d)?;
+            cmd = cmd.arg("--bind").arg(format!("{d}:/{scratch}"));
         }
 
-        let command = if let Some(entrypoint) = &spec.entrypoint {
-            util::Command::new(engine)
-                .arg("exec")
-                .args(options.split(' '))
-                .arg(image_path)
-                .arg(entrypoint)
-        } else {
-            util::Command::new(engine)
-                .arg("run")
-                .args(options.split(' '))
-                .arg(image_path)
+        cmd = cmd.arg(image_path.as_str());
+
+        if let Some(entrypoint) = &spec.entrypoint {
+            cmd = cmd.arg(entrypoint);
         }
-        .args(spec.args.clone())
-        .live();
+
+        let command = cmd.args(spec.args).live();
 
         let result = command.call();
-
-        // println!("{}", result.stdout.bright_black());
-        // eprintln!("{}", result.stderr.bright_red());
 
         let logs = format!(
             "{command}\nprocess success: {}\n{}\n{}\n{}\n",
@@ -67,12 +68,12 @@ impl Engine for HpcEngine {
         if !result.success {
             eprintln!(
                 "{}",
-                "Container {engine} exited with non-zero status"
+                format!("Container {engine} exited with non-zero status")
                     .bright_red()
                     .bold()
             );
             return Err(anyhow::anyhow!(
-                "Docker container exited with non-zero status"
+                "HPC {engine} container exited with non-zero status"
             ));
         }
 
@@ -98,9 +99,10 @@ impl Engine for HpcEngine {
         let image_path = hpc_image_path(app.container_image());
         if image_path.exists() {
             fs::remove_file(&image_path)?;
-        } else {
-            // println!("No image found at {:?}, nothing to clean.", image_path);
         }
+        // else {
+        //     println!("No image found at {:?}, nothing to clean.", image_path);
+        // }
 
         Ok(())
     }
@@ -127,5 +129,5 @@ fn hpc_images_root() -> Utf8PathBuf {
 }
 
 fn hpc_image_path(image_path: &str) -> Utf8PathBuf {
-    hpc_images_root().join(format!("{}.sif", image_path.replace("/", "-")))
+    hpc_images_root().join(format!("{}.sif", image_path.replace('/', "-")))
 }

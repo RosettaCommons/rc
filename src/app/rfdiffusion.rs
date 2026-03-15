@@ -23,7 +23,7 @@ impl AppSpec for Rfdiffusion {
                 "inference.output_prefix=/w/",
                 "inference.model_directory_path=/app/RFdiffusion/models",
             ],
-            app_args.clone(),
+            app_args,
         )
         .scratch("/app/RFdiffusion/schedules")
         .working_dir("/w")

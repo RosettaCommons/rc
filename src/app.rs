@@ -51,7 +51,7 @@ pub enum App {
 }
 
 impl App {
-    pub fn spec(&self) -> &'static dyn AppSpec {
+    pub fn spec(self) -> &'static dyn AppSpec {
         match self {
             App::Score => &score::SCORE,
             App::Rosetta => &rosetta::ROSETTA,

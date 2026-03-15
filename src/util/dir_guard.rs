@@ -1,12 +1,8 @@
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
-use std::ops::ShlAssign;
-
 use anyhow::Result;
 use camino::Utf8Path;
 use yansi::Paint;
 
-use crate::util::PaintExt;
+pub use crate::util::yansi::PaintExt;
 
 const DIR_SIGNATURE_FILE: &str = ".signature.rc";
 
@@ -79,7 +75,6 @@ mod tests {
     use assert_fs::TempDir;
     use camino::Utf8PathBuf;
     use std::fs;
-    use std::io::Sink;
 
     fn setup_test_dir() -> TempDir {
         TempDir::new().unwrap()

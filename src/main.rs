@@ -4,7 +4,7 @@ mod engine;
 mod telemetry;
 mod util;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use yansi::Paint;
@@ -158,11 +158,10 @@ fn main() -> Result<()> {
             let working_dir = working_dir
                 .unwrap_or_else(|| Utf8PathBuf::from("."))
                 .canonicalize()
-                .unwrap_or_else(|_| {
-                    panic!("{}", "Specified working directory does not exist".red())
-                });
+                .map_err(|_| anyhow!("Specified working directory does not exist".red()))?;
+
             let working_dir = Utf8PathBuf::try_from(working_dir)
-                .unwrap_or_else(|_| panic!("{}", "Working dir path contains invalid UTF-8".red()));
+                .map_err(|_| anyhow!("Working dir path contains invalid UTF-8".red()))?;
 
             driver::run(app.spec(), app_args, container_engine, working_dir)
         }

@@ -6,7 +6,7 @@ use yansi::Paint;
 use crate::{
     app::{App, AppSpec},
     engine::ContainerEngine,
-    util::PaintExt,
+    util::yansi::PaintExt,
 };
 
 pub fn run(
@@ -36,17 +36,13 @@ pub fn install(app: App, engine: ContainerEngine) -> Result<()> {
 }
 
 pub fn clean(app: Option<App>, container_engine: Option<ContainerEngine>) -> Result<()> {
-    let apps = if let Some(app) = app {
-        vec![app]
-    } else {
-        App::iter().collect()
-    }
-    .iter()
-    .map(App::spec)
-    .collect::<Vec<_>>();
+    let apps = match app {
+        Some(app) => vec![app.spec()],
+        None => App::iter().map(App::spec).collect(),
+    };
 
-    let engines: Vec<ContainerEngine> = if container_engine.is_some() {
-        vec![container_engine.unwrap()]
+    let engines: Vec<ContainerEngine> = if let Some(engine) = container_engine {
+        vec![engine]
     } else {
         ContainerEngine::iter()
             // when only need a single HPC engine
