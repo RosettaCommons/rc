@@ -17,8 +17,8 @@ pub struct NativeEngine;
 pub static NATIVE: NativeEngine = NativeEngine;
 
 impl Engine for NativeEngine {
-    fn execute(&self, app: &dyn AppSpec, args: Vec<String>, working_dir: &Utf8Path) -> Result<()> {
-        let spec = app.native_spec(args, working_dir);
+    fn execute(&self, app: &dyn AppSpec, args: Vec<String>, work_dir: &Utf8Path) -> Result<()> {
+        let spec = app.native_spec(args, work_dir);
 
         let pixi_evn_root = build_pixi_env(app)?;
 
@@ -39,7 +39,7 @@ impl Engine for NativeEngine {
 
         let result = command.call();
 
-        let t = Telemetry::new(working_dir);
+        let t = Telemetry::new(work_dir);
 
         let logs = format!(
             "{command}\nprocess success: {}\n{}\n{}\n{}\n",
@@ -112,7 +112,7 @@ fn build_pixi_env(app: &dyn AppSpec) -> Result<Utf8PathBuf, anyhow::Error> {
     Ok(pixi_evn_root)
 }
 
-fn pixi_evn_root(app: &dyn AppSpec) -> Utf8PathBuf {
+pub fn pixi_evn_root(app: &dyn AppSpec) -> Utf8PathBuf {
     cache_root().join(format!("native/{}", app.name()))
 }
 

@@ -8,6 +8,9 @@ use clap::ValueEnum;
 
 use crate::app::AppSpec;
 
+pub use hpc::hpc_image_path;
+pub use native::pixi_evn_root;
+
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq, strum::Display, strum::EnumIter)]
 #[strum(serialize_all = "lowercase")] //  "kebab-case"
 pub enum ContainerEngine {

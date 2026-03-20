@@ -34,7 +34,7 @@ macro_rules! engine_tests {
     (@emit $test_fn:ident; docker; ($($feature:literal),*) ) => {
         ::paste::paste! {
             #[test]
-            #[serial_test::serial]
+            #[serial_test::file_serial]
             #[cfg_attr(
                 not(all(feature = "docker-tests" $(, feature = $feature)*)),
                 ignore
@@ -49,7 +49,7 @@ macro_rules! engine_tests {
     (@emit $test_fn:ident; singularity; ($($feature:literal),*) ) => {
         ::paste::paste! {
             #[test]
-            #[serial_test::serial]
+            #[serial_test::file_serial]
             #[cfg_attr(
                 not(all(feature = "hpc-tests" $(, feature = $feature)*)),
                 ignore
@@ -63,7 +63,7 @@ macro_rules! engine_tests {
     (@emit $test_fn:ident; apptainer; ($($feature:literal),*) ) => {
         ::paste::paste! {
             #[test]
-            #[serial_test::serial]
+            #[serial_test::file_serial]
             #[cfg_attr(
                 not(all(feature = "hpc-tests" $(, feature = $feature)*)),
                 ignore
@@ -77,7 +77,7 @@ macro_rules! engine_tests {
     (@emit $test_fn:ident; none; ($($feature:literal),*) ) => {
         ::paste::paste! {
             #[test]
-            #[serial_test::serial]
+            #[serial_test::file_serial]
             #[cfg_attr(
                 not(all(feature = "native-tests" $(, feature = $feature)*)),
                 ignore

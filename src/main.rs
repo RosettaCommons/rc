@@ -1,4 +1,5 @@
 mod app;
+mod config;
 mod driver;
 mod engine;
 mod telemetry;
@@ -9,7 +10,7 @@ use camino::Utf8PathBuf;
 use clap::{Parser, Subcommand};
 use yansi::Paint;
 
-use crate::{app::App, driver::install, engine::ContainerEngine};
+use crate::{app::App, config::config_show, driver::install, engine::ContainerEngine};
 
 /// A command line tool to run various Rosetta applications
 #[derive(Parser, Debug)]
@@ -91,27 +92,26 @@ enum ConfigCmd {
         #[arg(long)]
         json: bool,
     },
+    // /// Set a configuration value
+    // Set {
+    //     /// Dotted key path, e.g. `cache.root`
+    //     key: String,
 
-    /// Set a configuration value
-    Set {
-        /// Dotted key path, e.g. `cache.root`
-        key: String,
+    //     /// Value to set (stringly-typed; you parse/validate per key)
+    //     value: String,
+    // },
 
-        /// Value to set (stringly-typed; you parse/validate per key)
-        value: String,
-    },
+    // /// Remove a configuration override (fall back to defaults)
+    // Unset {
+    //     /// Dotted key path, e.g. `cache.root`
+    //     key: String,
+    // },
 
-    /// Remove a configuration override (fall back to defaults)
-    Unset {
-        /// Dotted key path, e.g. `cache.root`
-        key: String,
-    },
+    // /// Open the config file in $EDITOR
+    // Edit,
 
-    /// Open the config file in $EDITOR
-    Edit,
-
-    /// Print the config file path
-    Path,
+    // /// Print the config file path
+    // Path,
 }
 
 #[derive(clap::Args, Debug)]
@@ -119,14 +119,13 @@ struct ConfigShowArgs {
     /// Output as JSON (useful for scripting)
     #[arg(long)]
     json: bool,
+    // /// Output as TOML (optional; pick what you support)
+    // #[arg(long, conflicts_with = "json")]
+    // toml: bool,
 
-    /// Output as TOML (optional; pick what you support)
-    #[arg(long, conflicts_with = "json")]
-    toml: bool,
-
-    /// Include where each value came from (defaults/env/file)
-    #[arg(long)]
-    origin: bool,
+    // /// Include where each value came from (defaults/env/file)
+    // #[arg(long)]
+    // origin: bool,
 }
 
 fn main() -> Result<()> {
@@ -165,12 +164,18 @@ fn main() -> Result<()> {
 
             driver::run(app.spec(), app_args, container_engine, working_dir)
         }
-        Commands::Config { config_command: _ } => {
-            todo!();
-        } // None => {
-          //     eprintln!("Error: No command specified");
-          //     eprintln!("Use --help to see available commands");
-          //     process::exit(1);
-          // }
+        Commands::Config { config_command } => match config_command {
+            ConfigCmd::Show(show_args) => config_show(show_args.json),
+            ConfigCmd::Get { .. } => unimplemented!(),
+            // ConfigCmd::Set(_) => unimplemented!(),
+            // ConfigCmd::Unset(_) => unimplemented!(),
+            // ConfigCmd::Edit => unimplemented!(),
+            // ConfigCmd::Path => unimplemented!(),
+        },
+        // None => {
+        //     eprintln!("Error: No command specified");
+        //     eprintln!("Use --help to see available commands");
+        //     process::exit(1);
+        // }
     }
 }

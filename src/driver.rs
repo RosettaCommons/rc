@@ -64,13 +64,3 @@ pub fn clean(app: Option<App>, container_engine: Option<ContainerEngine>) -> Res
 
     Ok(())
 }
-
-// pub fn clean_all() -> Result<()> {
-//     let cache_root = cache_root();
-//     println!(
-//         "Cleaning up cache dir {:?}...",
-//         cache_root.bright().orange()
-//     );
-//     fs::remove_dir_all(cache_root)?;
-//     Ok(())
-// }

@@ -18,7 +18,7 @@ pub static SINGULARITY: HpcEngine = HpcEngine("singularity");
 pub static APPTAINER: HpcEngine = HpcEngine("apptainer");
 
 impl Engine for HpcEngine {
-    fn execute(&self, app: &dyn AppSpec, args: Vec<String>, working_dir: &Utf8Path) -> Result<()> {
+    fn execute(&self, app: &dyn AppSpec, args: Vec<String>, work_dir: &Utf8Path) -> Result<()> {
         // assert!(matches!(self.0, "singularity" | "apptainer"));
 
         let spec = app.container_spec(args);
@@ -27,7 +27,7 @@ impl Engine for HpcEngine {
 
         let image_path = build_image(self, app.container_image());
 
-        let t = Telemetry::new(working_dir);
+        let t = Telemetry::new(work_dir);
 
         let verb = if spec.entrypoint.is_some() {
             "exec"
@@ -38,7 +38,7 @@ impl Engine for HpcEngine {
         let mut cmd = util::Command::new(engine)
             .arg(verb)
             .arg("--bind")
-            .arg(format!("{working_dir}:/w"))
+            .arg(format!("{work_dir}:/w"))
             .arg("--pwd")
             .arg("/w");
 
@@ -128,6 +128,6 @@ fn hpc_images_root() -> Utf8PathBuf {
     root
 }
 
-fn hpc_image_path(image_path: &str) -> Utf8PathBuf {
-    hpc_images_root().join(format!("{}.sif", image_path.replace('/', "-")))
+pub fn hpc_image_path(image: &str) -> Utf8PathBuf {
+    hpc_images_root().join(format!("{}.sif", image.replace('/', "-")))
 }

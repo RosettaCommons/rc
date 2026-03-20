@@ -15,18 +15,18 @@ pub struct DockerEngine;
 pub static DOCKER: DockerEngine = DockerEngine;
 
 impl Engine for DockerEngine {
-    fn execute(&self, app: &dyn AppSpec, args: Vec<String>, working_dir: &Utf8Path) -> Result<()> {
+    fn execute(&self, app: &dyn AppSpec, args: Vec<String>, work_dir: &Utf8Path) -> Result<()> {
         let spec = app.container_spec(args);
 
         self.install(app)?;
 
-        let t = Telemetry::new(working_dir);
+        let t = Telemetry::new(work_dir);
 
         let mut cmd = util::Command::new("docker")
             .arg("run")
             .arg("--rm")
             .arg("--volume")
-            .arg(format!("{working_dir}:/w"))
+            .arg(format!("{work_dir}:/w"))
             .arg("--workdir")
             .arg("/w");
 
