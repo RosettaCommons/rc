@@ -58,7 +58,7 @@ impl AppSpec for ProteinmpnnScript {
         );
 
         let script_have_input_path_option =
-            !SCRIPTS_WITH_INPUT_PATH_OPTION.contains(&app_args[0].as_str());
+            SCRIPTS_WITH_INPUT_PATH_OPTION.contains(&app_args[0].as_str());
 
         let mut app_args = if script_have_input_path_option {
             map_input_and_output_options(app_args, "/w".into())
@@ -80,7 +80,7 @@ impl AppSpec for ProteinmpnnScript {
         );
 
         let script_have_input_path_option =
-            !SCRIPTS_WITH_INPUT_PATH_OPTION.contains(&app_args[0].as_str());
+            SCRIPTS_WITH_INPUT_PATH_OPTION.contains(&app_args[0].as_str());
 
         app_args.insert(0, "python".into());
         app_args[1].insert_str(0, "helper_scripts/");
