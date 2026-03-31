@@ -8,6 +8,17 @@ use crate::{
 pub struct Proteinmpnn;
 pub static PROTEINMPNN: Proteinmpnn = Proteinmpnn;
 
+/// Rewrites path arguments in `app_args` so that they are always absolute, and
+/// ensures `--out_folder` is present.
+///
+/// Two options are recognised:
+/// - `--pdb_path <path>` — path to the input PDB file or directory.
+/// - `--out_folder <path>` — destination directory for ProteinMPNN output.
+///
+/// For each recognised option, if the supplied value is a relative path it is
+/// resolved against `working_dir`.  If `--out_folder` is not present at all it
+/// is appended with `working_dir` as its value, so downstream code can always
+/// rely on an explicit output location.
 fn map_input_and_output_options(mut app_args: Vec<String>, working_dir: &Utf8Path) -> Vec<String> {
     const OPTIONS: [&str; 2] = ["--pdb_path", "--out_folder"];
     const OUTPUT_OPTION: &str = OPTIONS[1];
@@ -65,5 +76,104 @@ impl AppSpec for Proteinmpnn {
             .collect::<Vec<_>>();
 
         NativeRunSpec::new(app_args)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn wd() -> &'static Utf8Path {
+        Utf8Path::new("/work")
+    }
+
+    fn args(v: &[&str]) -> Vec<String> {
+        v.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn injects_out_folder_when_absent() {
+        let result = map_input_and_output_options(args(&["script.py"]), wd());
+        assert_eq!(result, args(&["script.py", "--out_folder", "/work"]));
+    }
+
+    #[test]
+    fn does_not_inject_out_folder_when_present_absolute() {
+        let input = args(&["script.py", "--out_folder", "/custom/output"]);
+        let result = map_input_and_output_options(input, wd());
+        assert_eq!(
+            result,
+            args(&["script.py", "--out_folder", "/custom/output"])
+        );
+    }
+
+    #[test]
+    fn makes_out_folder_absolute_when_relative() {
+        let input = args(&["script.py", "--out_folder", "results"]);
+        let result = map_input_and_output_options(input, wd());
+        assert_eq!(
+            result,
+            args(&["script.py", "--out_folder", "/work/results"])
+        );
+    }
+
+    #[test]
+    fn makes_pdb_path_absolute_when_relative() {
+        let input = args(&["script.py", "--pdb_path", "input.pdb"]);
+        let result = map_input_and_output_options(input, wd());
+        assert_eq!(
+            result,
+            args(&[
+                "script.py",
+                "--pdb_path",
+                "/work/input.pdb",
+                "--out_folder",
+                "/work"
+            ])
+        );
+    }
+
+    #[test]
+    fn leaves_pdb_path_unchanged_when_absolute() {
+        let input = args(&["script.py", "--pdb_path", "/data/input.pdb"]);
+        let result = map_input_and_output_options(input, wd());
+        assert_eq!(
+            result,
+            args(&[
+                "script.py",
+                "--pdb_path",
+                "/data/input.pdb",
+                "--out_folder",
+                "/work"
+            ])
+        );
+    }
+
+    #[test]
+    fn handles_both_options_together() {
+        let input = args(&[
+            "script.py",
+            "--pdb_path",
+            "input.pdb",
+            "--out_folder",
+            "out",
+        ]);
+        let result = map_input_and_output_options(input, wd());
+        assert_eq!(
+            result,
+            args(&[
+                "script.py",
+                "--pdb_path",
+                "/work/input.pdb",
+                "--out_folder",
+                "/work/out"
+            ])
+        );
+    }
+
+    #[test]
+    fn empty_args_injects_out_folder() {
+        let result = map_input_and_output_options(vec![], wd());
+        assert_eq!(result, args(&["--out_folder", "/work"]));
     }
 }
