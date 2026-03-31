@@ -1,6 +1,6 @@
 [package]
 name = "rc"
-version = "0.7.1"
+version = "0.8.2"
 edition = "2024"
 authors = ["Sergey Lyskov", "Hope Woods", "Rachel Clune"]
 description = "Command line tool to run various biomolecular structural prediction, analysis and design applications"
