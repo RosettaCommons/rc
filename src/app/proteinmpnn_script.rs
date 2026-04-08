@@ -1,7 +1,7 @@
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8Path;
 
 use crate::{
-    app::{AppSpec, ContainerConfig, NativeRunSpec},
+    app::{AppSpec, ContainerConfig, NativeRunSpec, make_absolute},
     util::include_asset,
 };
 
@@ -21,15 +21,6 @@ pub static PROTEINMPNN_SCRIPT: ProteinmpnnScript = ProteinmpnnScript;
 /// All other arguments in `app_args` are passed through untouched.
 fn map_input_and_output_options(mut app_args: Vec<String>, working_dir: &Utf8Path) -> Vec<String> {
     const OPTIONS: [&str; 2] = ["--input_path=", "--output_path="];
-
-    fn make_absolute(working_dir: impl Into<Utf8PathBuf>, path_str: &str) -> Utf8PathBuf {
-        let path = Utf8PathBuf::from(path_str);
-        if path.is_absolute() {
-            path
-        } else {
-            working_dir.into().join(path)
-        }
-    }
 
     for option in OPTIONS {
         if !app_args.iter_mut().any(|arg| {

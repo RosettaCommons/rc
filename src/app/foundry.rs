@@ -1,7 +1,7 @@
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8Path;
 
 use crate::{
-    app::{AppSpec, ContainerConfig, NativeRunSpec},
+    app::{AppSpec, ContainerConfig, NativeRunSpec, make_absolute},
     util::include_asset,
 };
 
@@ -50,15 +50,6 @@ fn with_default_checkpoints(mut app_args: Vec<String>, weights_path: &str) -> Ve
     app_args
 }
 
-fn make_absolute(working_dir: &Utf8Path, path_str: &str) -> Utf8PathBuf {
-    let path = Utf8PathBuf::from(path_str);
-    if path.is_absolute() {
-        path
-    } else {
-        working_dir.join(path)
-    }
-}
-
 fn map_inputs_and_out_dir(mut app_args: Vec<String>, working_dir: &Utf8Path) -> Vec<String> {
     const PREFIXS: [&str; 2] = ["inputs=", "out_dir="];
     const OUTPUT_PREFIX: &str = PREFIXS[1];
@@ -84,24 +75,18 @@ fn map_inputs_and_out_dir(mut app_args: Vec<String>, working_dir: &Utf8Path) -> 
 }
 
 fn map_input_and_output_options(mut app_args: Vec<String>, working_dir: &Utf8Path) -> Vec<String> {
-    const OPTIONS: [&str; 2] = ["--structure_path", "--out_directory"];
-    const OUTPUT_OPTION: &str = OPTIONS[1];
+    const INPUT_OPTION: &str = "--structure_path";
+    const OUTPUT_OPTION: &str = "--out_directory";
 
-    let mut output_option_present = false;
-
-    for i in 1..app_args.len() {
-        for option in OPTIONS {
-            if app_args[i - 1] == option {
-                app_args[i] = make_absolute(working_dir, &app_args[i]).into();
-                if option == OUTPUT_OPTION {
-                    output_option_present = true;
-                }
-                break;
-            }
+    for option in [INPUT_OPTION, OUTPUT_OPTION] {
+        if let Some(i) = app_args.iter().position(|a| a == option)
+            && let Some(val) = app_args.get_mut(i + 1)
+        {
+            *val = make_absolute(working_dir, val).into();
         }
     }
 
-    if !output_option_present {
+    if !app_args.iter().any(|a| a == OUTPUT_OPTION) {
         app_args.extend([OUTPUT_OPTION.into(), working_dir.to_string()]);
     }
     app_args

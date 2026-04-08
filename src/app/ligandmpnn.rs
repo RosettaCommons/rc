@@ -1,7 +1,7 @@
-use camino::{Utf8Path, Utf8PathBuf};
+use camino::Utf8Path;
 
 use crate::{
-    app::{AppSpec, ContainerConfig, NativeRunSpec},
+    app::{AppSpec, ContainerConfig, NativeRunSpec, make_absolute},
     util::include_asset,
 };
 
@@ -18,33 +18,18 @@ pub static LIGANDMPNN: Ligandmpnn = Ligandmpnn;
 /// If `--out_folder` is not present at all, it is appended as `--out_folder <working_dir>` so
 /// that LigandMPNN always writes its output to a known location.
 fn map_input_and_output_options(mut app_args: Vec<String>, working_dir: &Utf8Path) -> Vec<String> {
-    const OPTIONS: [&str; 2] = ["--pdb_path", "--out_folder"];
-    const OUTPUT_OPTION: &str = OPTIONS[1];
+    const INPUT_OPTION: &str = "--pdb_path";
+    const OUTPUT_OPTION: &str = "--out_folder";
 
-    let mut output_option_present = false;
-
-    fn make_absolute(working_dir: &Utf8Path, path_str: &str) -> Utf8PathBuf {
-        let path = Utf8PathBuf::from(path_str);
-        if path.is_absolute() {
-            path
-        } else {
-            working_dir.join(path)
+    for option in [INPUT_OPTION, OUTPUT_OPTION] {
+        if let Some(i) = app_args.iter().position(|a| a == option)
+            && let Some(val) = app_args.get_mut(i + 1)
+        {
+            *val = make_absolute(working_dir, val).into();
         }
     }
 
-    for i in 1..app_args.len() {
-        for option in OPTIONS {
-            if app_args[i - 1] == option {
-                app_args[i] = make_absolute(working_dir, &app_args[i]).into();
-                if option == OUTPUT_OPTION {
-                    output_option_present = true;
-                }
-                break;
-            }
-        }
-    }
-
-    if !output_option_present {
+    if !app_args.iter().any(|a| a == OUTPUT_OPTION) {
         app_args.extend([OUTPUT_OPTION.into(), working_dir.to_string()]);
     }
     app_args

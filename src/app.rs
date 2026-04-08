@@ -1,3 +1,4 @@
+mod colabfold;
 mod foundry;
 mod ligandmpnn;
 mod picap;
@@ -8,7 +9,7 @@ mod rfdiffusion;
 mod rosetta;
 mod score;
 
-use camino::Utf8Path;
+use camino::{Utf8Path, Utf8PathBuf};
 use clap::ValueEnum;
 use std::collections::HashMap;
 
@@ -45,6 +46,10 @@ pub enum App {
     /// Run the Foundry command https://github.com/RosettaCommons/foundry
     #[value(aliases = ["Foundry"])]
     Foundry,
+
+    /// Run the ColabFold command https://github.com/sokrypton/ColabFold
+    #[value(aliases = ["ColabFold"])]
+    Colabfold,
     // /// Run the PiCAP/CAPSIF2 command https://github.com/Graylab/picap
     // #[value(aliases = ["PiCAP", "CAPSIF2"])]
     // Picap,
@@ -61,6 +66,7 @@ impl App {
             App::ProteinmpnnScript => &proteinmpnn_script::PROTEINMPNN_SCRIPT,
             App::Ligandmpnn => &ligandmpnn::LIGANDMPNN,
             App::Foundry => &foundry::FOUNDRY,
+            App::Colabfold => &colabfold::COLABFOLD,
             // App::Picap => &picap::PICAP,
             //_ => panic!("unimplementet app"),
         }
@@ -175,6 +181,15 @@ impl NativeRunSpec {
 //         Self { container, native }
 //     }
 // }
+
+fn make_absolute(working_dir: &Utf8Path, path_str: &str) -> Utf8PathBuf {
+    let path = Utf8PathBuf::from(path_str);
+    if path.is_absolute() {
+        path
+    } else {
+        working_dir.join(path)
+    }
+}
 
 #[cfg(test)]
 mod tests {
