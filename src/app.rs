@@ -1,6 +1,7 @@
 mod colabfold;
 mod foundry;
 mod ligandmpnn;
+mod openfold3;
 mod patchman;
 mod picap;
 mod proteinmpnn;
@@ -55,6 +56,10 @@ pub enum App {
     /// Run the Patchman command https://github.com/Furman-Lab/PatchMAN
     #[value(aliases = ["Patchman"])]
     Patchman,
+
+    /// Run the OpenFold3 command https://openfold.io
+    #[value(aliases = ["OpenFold3"])]
+    Openfold3,
     // /// Run the PiCAP/CAPSIF2 command https://github.com/Graylab/picap
     // #[value(aliases = ["PiCAP", "CAPSIF2"])]
     // Picap,
@@ -73,6 +78,7 @@ impl App {
             App::Foundry => &foundry::FOUNDRY,
             App::Colabfold => &colabfold::COLABFOLD,
             App::Patchman => &patchman::PATCHMAN,
+            App::Openfold3 => &openfold3::OPENFOLD3,
             // App::Picap => &picap::PICAP,
             //_ => panic!("unimplementet app"),
         }

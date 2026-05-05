@@ -1,0 +1,178 @@
+[workspace]
+name = "openfold3"
+description = "Pixi environment for OpenFold3 GPU and CPU inference"
+platforms = ["linux-64"]
+channels = ["conda-forge", "bioconda", "pytorch", "nvidia"]
+
+[dependencies]
+python = "3.12.*"
+pip = "*"
+setuptools = "*"
+uv = "*"
+git = "*"
+awscli = "*"
+pytorch = { version = "*", channel = "pytorch" }
+pytorch-lightning = ">=2.1"
+biopython = "*"
+numpy = "*"
+pandas = "*"
+pyyaml = "*"
+requests = "*"
+scipy = "*"
+tqdm = "*"
+typing-extensions = "*"
+wandb = "*"
+modelcif = "*"
+ml-collections = "*"
+mkl = "*"
+rdkit = "*"
+biotite = "*"
+mmseqs2 = "*"
+hmmer = "*"
+hhsuite = "*"
+snakemake = "*"
+memory_profiler = "*"
+func_timeout = "*"
+boto3 = "*"
+python-lmdb = "1.6.*"
+ijson = "*"
+click = "*"
+pydantic = "*"
+
+[feature.gpu.dependencies]
+pytorch-cuda = { version = "12.4.*", channel = "pytorch" }
+
+[environments]
+default = ["gpu"]
+cpu = []
+
+[activation.env]
+OPENFOLD3_DIR = "$PIXI_PROJECT_ROOT/openfold-3"
+OPENFOLD3_VERSION = "main"
+OPENFOLD_CACHE = "$PIXI_PROJECT_ROOT/.openfold3"
+OPENFOLD_CPU_RUNNER_YAML = "$OPENFOLD_CACHE/cpu_runner.yml"
+OPENFOLD_GPU_RUNNER_YAML = "$OPENFOLD_CACHE/gpu_runner.yml"
+CUTLASS_PATH = "$OPENFOLD_CACHE/cutlass"
+KMP_AFFINITY = "none"
+MPLBACKEND = "Agg"
+
+[tasks.clone]
+cmd = ["bash", "-lc", """
+set -euo pipefail
+
+if [ ! -d "$OPENFOLD3_DIR/.git" ]; then
+  git clone https://github.com/aqlaboratory/openfold-3 "$OPENFOLD3_DIR"
+fi
+
+cd "$OPENFOLD3_DIR"
+git fetch --all --tags
+git checkout "$OPENFOLD3_VERSION"
+"""]
+
+[tasks.install]
+depends-on = ["clone"]
+cmd = ["bash", "-lc", """
+set -euo pipefail
+
+cd "$OPENFOLD3_DIR"
+
+# DeepSpeed Evoformer attention expects CUTLASS headers to be available.
+mkdir -p "$OPENFOLD_CACHE"
+if [ ! -d "$CUTLASS_PATH/include" ]; then
+  git clone https://github.com/NVIDIA/cutlass --branch v3.6.0 --depth 1 "$CUTLASS_PATH"
+fi
+
+# Install Python-only packages that are not reliably available from conda.
+uv pip install awscrt pdbeccdutils kalign-python
+
+# Avoid resolving pyproject dependencies here; the CPU environment above
+# intentionally excludes CUDA/DeepSpeed extras.
+uv pip install --no-deps -e .
+
+"""]
+
+[tasks.clean-cache]
+cmd = ["bash", "-lc", """
+set -euo pipefail
+
+rm -rf "$OPENFOLD_CACHE"
+mkdir -p "$OPENFOLD_CACHE"
+"""]
+
+[tasks.setup]
+depends-on = ["install"]
+cmd = ["bash", "-lc", """
+set -euo pipefail
+
+mkdir -p "$OPENFOLD_CACHE"
+
+cat > "$OPENFOLD_GPU_RUNNER_YAML" <<'EOF'
+pl_trainer_args:
+  accelerator: gpu
+  devices: 1
+
+model_update:
+  presets:
+    - predict
+    - low_mem
+  custom:
+    settings:
+      memory:
+        eval:
+          use_triton_triangle_kernels: false
+          use_deepspeed_evo_attention: false
+          use_cueq_triangle_kernels: false
+EOF
+
+cat > "$OPENFOLD_CPU_RUNNER_YAML" <<'EOF'
+pl_trainer_args:
+  accelerator: cpu
+  devices: 1
+
+model_update:
+  presets:
+    - predict
+    - low_mem
+  custom:
+    settings:
+      memory:
+        eval:
+          use_triton_triangle_kernels: false
+          use_deepspeed_evo_attention: false
+          use_cueq_triangle_kernels: false
+EOF
+
+aws s3 cp \
+  s3://openfold3-data/openfold3-parameters/of3-p2-155k.pt \
+  "$OPENFOLD_CACHE/of3-p2-155k.pt" \
+  --no-sign-request
+
+echo "$OPENFOLD_CACHE" > "$OPENFOLD_CACHE/ckpt_root"
+
+"""]
+
+# GPU-only runs
+[tasks.run]
+# depends-on = ["install", "setup"]
+args = ["query_json"]
+cmd = ["bash", "-lc", """
+set -euo pipefail
+
+run_openfold predict \
+  --runner-yaml="$OPENFOLD_GPU_RUNNER_YAML" \
+  --query_json="{{query_json}}"
+"""]
+
+# CPU-only runs
+[tasks.execute]
+# depends-on = ["install", "setup"]
+args = ["args"]
+cmd = ["bash", "-lc", """
+set -euo pipefail
+
+run_openfold predict \
+  --runner-yaml="$OPENFOLD_CPU_RUNNER_YAML" \
+  {{args}}
+"""]
+# --output-dir="{{working_dir}}"
+# --query_json="{{query_json}}"
